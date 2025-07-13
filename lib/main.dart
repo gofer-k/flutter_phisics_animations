@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 import 'bernoulli_formula.dart';
+import 'factor_input_row.dart';
+import 'display_expression.dart';
 
 void main() {
   runApp(const MyApp());
@@ -61,16 +63,64 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   late AnimationController _curveAnimationController;
   late Animation<double> _curveAnimation;
 
+  // Controllers for factor inputs
+  late TextEditingController _startAreaController;
+  late TextEditingController _endAreaController;
+  late TextEditingController _strokeWidthController;
+  late TextEditingController _flowPercentageController;
+  late TextEditingController _animationDurationController;
+  // Add more controllers as needed for other factors (density, pressure, etc.)
+
+  // Variables to hold the parsed values (optional, but good for direct use)
+  double _currentStartArea = 20.0;
+  double _currentEndArea = 50.0;
+  double _currentStrokeWidth = 1.5;
+  double _currentFlowPercentage = 0.10;
+  int _currentAnimationDurationSeconds = 3;
+  
   @override
   void initState() {
     super.initState();
-    // ... (your existing initState code)
 
+    // Initialize controllers with default values
+    _startAreaController = TextEditingController(text: _currentStartArea.toString());
+    _endAreaController = TextEditingController(text: _currentEndArea.toString());
+    _strokeWidthController = TextEditingController(text: _currentStrokeWidth.toString());
+    _flowPercentageController = TextEditingController(text: (_currentFlowPercentage * 100).toStringAsFixed(0)); // Display as %
+    _animationDurationController = TextEditingController(text: _currentAnimationDurationSeconds.toString());
+
+
+    // Listener to update BernoulliPainter when values change (example for one controller)
+    _startAreaController.addListener(_updatePainterParameters);
+    _endAreaController.addListener(_updatePainterParameters);
+    _strokeWidthController.addListener(_updatePainterParameters);
+    _flowPercentageController.addListener(_updatePainterParameters);
+    _animationDurationController.addListener(_updatePainterAndAnimationParameters);
+    
     _curveAnimationController = AnimationController(
       vsync: this, // Requires SingleTickerProviderStateMixin
-      duration: const Duration(seconds: 3), // Duration for the curve drawing animation
+      duration: Duration(seconds: _currentAnimationDurationSeconds), // Duration for the curve drawing animation
     );
+    _rebuildCurveAnimation();
+        // Optionally start the animation immediately
+    // _curveAnimationController.forward();
+  }
 
+  @override
+  void dispose() {
+    _startAreaController.dispose();
+    _endAreaController.dispose();
+    _strokeWidthController.dispose();
+    _flowPercentageController.dispose();
+    _animationDurationController.dispose();
+
+    _curveAnimationController.dispose();
+    // ... (your existing dispose code)
+    super.dispose();
+  }
+
+  // Helper method to build or rebuild the _curveAnimation
+  void _rebuildCurveAnimation() {
     _curveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _curveAnimationController,
@@ -81,18 +131,38 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         // This will trigger a repaint of CustomPaint
       });
     });
-
-    // Optionally start the animation immediately
-    // _curveAnimationController.forward();
   }
+  
+  void _updatePainterParameters() {
+    // Try to parse values and update state, then call setState to redraw CustomPaint
+    setState(() {
+      _currentStartArea = double.tryParse(_startAreaController.text) ?? _currentStartArea;
+      _currentEndArea = double.tryParse(_endAreaController.text) ?? _currentEndArea;
+      _currentStrokeWidth = double.tryParse(_strokeWidthController.text) ?? _currentStrokeWidth;
 
-  @override
-  void dispose() {
-    _curveAnimationController.dispose();
-    // ... (your existing dispose code)
-    super.dispose();
+      double percentageInput = double.tryParse(_flowPercentageController.text) ?? (_currentFlowPercentage * 100);
+      _currentFlowPercentage = (percentageInput / 100).clamp(0.0, 1.0);
+
+      _rebuildCurveAnimation();
+    });
   }
+  
+  void _updatePainterAndAnimationParameters() {
+    setState(() {
+      _currentAnimationDurationSeconds = int.tryParse(_animationDurationController.text) ?? _currentAnimationDurationSeconds;
+      if (_currentAnimationDurationSeconds < 1) _currentAnimationDurationSeconds = 1; // Min duration
 
+      // Update other parameters as well if they are linked or for consistency
+      _updatePainterParameters();
+
+      // If animation duration changes, we need to update the AnimationController
+      _curveAnimationController.duration = Duration(seconds: _currentAnimationDurationSeconds);
+      // If the animation is running, you might want to stop and restart it,
+      // or let it finish its current cycle with the old duration.
+      // For simplicity, changing duration will apply on next _startCurveAnimation.
+    });
+  }
+  
   // Add a method to start/restart the animation if needed
   void _startCurveAnimation() {
     _curveAnimationController.reset();
@@ -101,6 +171,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen width
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double widgetWidth = screenWidth * 0.90; // 90% of screen width
+
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -115,7 +189,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        // https://pl.wikipedia.org/wiki/R%C3%B3wnanie_Bernoulliego
+        title: Text("ogólna postać formuli Bernoulli"),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -136,25 +211,25 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const SizedBox(height: 30), // Add some spacing
-            // https://pl.wikipedia.org/wiki/R%C3%B3wnanie_Bernoulliego
-            Text(
-              "General Bernoulli formula",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Math.tex(r'\frac{V_1^2}{2} + g*h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g*h_2 + \frac{p_2}{\rho}',
-                textStyle: Theme.of(context).textTheme.bodySmall),
+            display_expression(context: context, expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.2, widgetWidth: widgetWidth),
+
             const SizedBox(height: 10), // Add some spacing
-            Text(
-              "Visualizing BernoulliFormulaAnim.ease:",
-              style: Theme.of(context).textTheme.titleMedium,
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
             ),
-            //TODO: modify the simulation parameters
-            // V1, V2, pho (list of fluids to choose), g (const), h1, h2, p1, p2
+            FactorInputRow(label: r'\text{Pole przekroju } p_1', unit: 'rcm^2', controller: _startAreaController),
+            FactorInputRow(label:  r'\text{Pole przekroju } p_2', unit: 'rcm^2', controller: _endAreaController),
+            // display_expression(context: context, expression: r'\text{Głębokość } h_1', scale: 1.0, widgetWidth: widgetWidth),
+            // display_expression(context: context, expression: r'\text{Głębokość } h_2', scale: 1.0, widgetWidth: widgetWidth),
+            // display_expression(context: context, expression: r'\text{Prędkość } V_1', scale: 1.0, widgetWidth: widgetWidth),
+            // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
+            // display_expression(context: context, expression: r'\text{Ciśnienie } p_1', scale: 1.0, widgetWidth: widgetWidth),
 
             const SizedBox(height: 10),
             Container( // Optional: Add a border to see the CustomPaint area
-              width: 250,
+              width: widgetWidth,
               height: 250,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade400),
