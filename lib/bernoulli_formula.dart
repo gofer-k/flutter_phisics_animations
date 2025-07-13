@@ -59,11 +59,18 @@ class BernoulliPainter extends CustomPainter {
     List<Offset> leftBorderPoints = _generateBoardPaths(fullPath.computeMetrics(), true); // For one side
     List<Offset> rightBorderPoints = _generateBoardPaths(fullPath.computeMetrics(), false); // For the other side
 
-    if (animationProgress <= 0) return;
+    // --- Draw the Flow Path (Animated Segment) ---
+    if (animationProgress > 0) { // Only start drawing flow after animation begins
+      _drawFlowPath(
+          canvas,
+          leftBorderPoints,
+          rightBorderPoints,
+          originalCurveColor.withValues(alpha: 0.5), // Example color
+          0.10 // Draw a 10% segment
+      );
+    }
 
     // Use the helper to draw the original path
-    _drawFlowPath(canvas, leftBorderPoints, rightBorderPoints, originalCurveColor.withValues(alpha: 0.5));
-
     _drawDashedPath(canvas, animatedOriginalPath, dashPattern, originalCurveColor);
 
     _drawPipeBorder(canvas, offsetPaint, leftBorderPoints);
@@ -106,7 +113,7 @@ class BernoulliPainter extends CustomPainter {
   void _drawFlowPath(Canvas canvas,
       List<Offset> offsetPointsBorderLeft,
       List<Offset> offsetPointsBorderRight,
-      Color flowColor) {
+      Color flowColor, double flowSegmentPercentage) {
 
     if (offsetPointsBorderLeft.isEmpty || offsetPointsBorderRight.isEmpty) {
       return; // Nothing to draw
@@ -129,47 +136,93 @@ class BernoulliPainter extends CustomPainter {
       ..color = flowColor
       ..style = PaintingStyle.fill; // We want to fill the shape
 
-    // Calculate how many segments to draw based on animationProgress
-    // Multiply by totalSegments because each "segment" connects two points.
-    // Add 1 because if animationProgress is > 0, we want at least one quad.
-    final int segmentsToDraw = (animationProgress * totalSegments).ceil().clamp(0, totalSegments);
+    // Calculate the number of segments for the 10% (or flowSegmentPercentage) window
+    // Ensure at least 1 segment if totalSegments is small and percentage is also small
+    final int windowSizeInSegments =
+    (totalSegments * flowSegmentPercentage).ceil().clamp(1, totalSegments);
 
-    if (segmentsToDraw <= 0) {
-      return; // Nothing to draw yet based on animation progress
+    // Calculate the starting segment index for the window based on animationProgress
+    // This makes the window slide along the path.
+    // (totalSegments - windowSizeInSegments) is the maximum starting index
+    // to ensure the window doesn't go out of bounds at the end.
+    final int maxStartSegment = totalSegments - windowSizeInSegments;
+
+    // If maxStartSegment is negative (e.g. window is larger than total),
+    // it means we draw the whole thing from the start.
+    // This can happen if flowSegmentPercentage is 1.0 or very close with few totalSegments.
+    final int currentStartSegment = (maxStartSegment > 0)
+        ? (animationProgress * maxStartSegment).floor().clamp(0, maxStartSegment)
+        : 0;
+
+    // Calculate the ending segment index for the window
+    final int currentEndSegment =
+    (currentStartSegment + windowSizeInSegments).clamp(0, totalSegments);
+
+    // If the window has no actual width to draw (can happen with clamping and small numbers)
+    if (currentStartSegment >= currentEndSegment && !(currentStartSegment == 0 && currentEndSegment == 0 && totalSegments == 0) ) {
+
+      // Check an edge case: if start and end are 0 because totalSegments is 0, we already returned.
+      // If start and end are same but not 0 (e.g. start=5, end=5), then it's an empty window.
+      // However, if the intent is to draw a "single point" segment (which is visually nothing for a fill),
+      // and currentStartSegment = currentEndSegment = totalSegments, it means we are at the very end.
+      // To simplify, if window has no span, just return.
+      if (totalSegments > 0 && currentStartSegment == currentEndSegment && currentStartSegment < totalSegments) {
+        // This condition means the window is of zero length before the end.
+        return;
+      }
+        // If currentStartSegment == currentEndSegment == totalSegments, it implies the animation is at the very end
+        // and the window is meant to be at the last segment. Let it proceed if it makes sense for your logic.
+        // For now, if no span, we return.
+        if (currentStartSegment == currentEndSegment && currentStartSegment < totalSegments) return;
     }
 
     final Path flowPath = Path();
 
-    // Start the path at the first point of the left border
-    flowPath.moveTo(offsetPointsBorderLeft[0].dx, offsetPointsBorderLeft[0].dy);
+    // We need at least two points on each side to form a quadrilateral.
+    // The points are indexed from 0 to totalSegments.
+    // A segment `s` uses points `s` and `s+1`.
 
-    // Add points for the left border up to the animated segment
-    for (int i = 1; i <= segmentsToDraw; i++) {
-      // Ensure we don't go out of bounds if offsetPointsBorderLeft has fewer points than segmentsToDraw+1
+    // Start the path at the `currentStartSegment` point of the left border
+    if (currentStartSegment < offsetPointsBorderLeft.length) {
+      flowPath.moveTo(offsetPointsBorderLeft[currentStartSegment].dx,
+          offsetPointsBorderLeft[currentStartSegment].dy);
+    } else if (offsetPointsBorderLeft.isNotEmpty) {
+      // Fallback if currentStartSegment is somehow out of direct bounds but list is not empty
+      flowPath.moveTo(offsetPointsBorderLeft.last.dx, offsetPointsBorderLeft.last.dy);
+    } else {
+      return; // Cannot start path
+    }
+
+    // Add points for the left border within the window
+    // Iterate from currentStartSegment + 1 up to currentEndSegment
+    for (int i = currentStartSegment + 1; i <= currentEndSegment; i++) {
       if (i < offsetPointsBorderLeft.length) {
         flowPath.lineTo(offsetPointsBorderLeft[i].dx, offsetPointsBorderLeft[i].dy);
       } else if (offsetPointsBorderLeft.isNotEmpty) {
-        // If out of bounds but list is not empty, use the last point
+        // If 'i' goes out of bounds, use the last available point of the left border
+        // This can happen if currentEndSegment reaches the very end.
         flowPath.lineTo(offsetPointsBorderLeft.last.dx, offsetPointsBorderLeft.last.dy);
+        break; // Stop adding points from left if we've hit the end
       }
     }
 
-    // Now, add points for the right border in reverse order to close the polygon
-    // The last point connected on the right border should correspond to the
-    // last point connected on the left border (index `segmentsToDraw`)
-    for (int i = segmentsToDraw; i >= 0; i--) {
-      // Ensure we don't go out of bounds
+    // Now, add points for the right border within the window, in reverse order
+    // Iterate from currentEndSegment down to currentStartSegment
+    for (int i = currentEndSegment; i >= currentStartSegment; i--) {
       if (i < offsetPointsBorderRight.length) {
         flowPath.lineTo(offsetPointsBorderRight[i].dx, offsetPointsBorderRight[i].dy);
       } else if (offsetPointsBorderRight.isNotEmpty) {
+        // If 'i' goes out of bounds, use the last available point of the right border
         flowPath.lineTo(offsetPointsBorderRight.last.dx, offsetPointsBorderRight.last.dy);
+        // We don't break here as we need to try and connect back to currentStartSegment
       }
     }
 
-    // Close the path to form a polygon (connects the last point of right border back to the first point of left border)
-    flowPath.close();
+    flowPath.close(); // Close the path to form the polygon for the segment
 
-    canvas.drawPath(flowPath, flowPaint);
+    if (!flowPath.getBounds().isEmpty) { // Only draw if the path is not empty
+      canvas.drawPath(flowPath, flowPaint);
+    }
   }
 
   void _drawPipeBorder(Canvas canvas, Paint offsetPaint, final List<Offset> offsetPoints1) {
