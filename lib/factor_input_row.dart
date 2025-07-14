@@ -1,9 +1,10 @@
+import 'package:first_flutter_app/display_expression.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For TextInputFormatter
 
 class FactorInputRow extends StatelessWidget {
   final String label;
-  final String unit;
+  final String? unit;
   final TextEditingController controller;
   final String? hintText;
   final TextInputType keyboardType;
@@ -11,15 +12,15 @@ class FactorInputRow extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
 
   const FactorInputRow({
-    Key? key,
+    super.key,
     required this.label,
-    required this.unit,
+    this.unit,
     required this.controller,
     this.hintText,
     this.keyboardType = TextInputType.number,
     this.onChanged,
     this.inputFormatters,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +30,7 @@ class FactorInputRow extends StatelessWidget {
         children: <Widget>[
           Expanded(
             flex: 2, // Give more space to the label
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            child: DisplayExpression(context: context, expression: label, scale: 1.5),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -52,13 +50,11 @@ class FactorInputRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 40, // Fixed width for the unit to ensure alignment
-            child: Text(
-              unit,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
+          if (unit != null)
+            SizedBox(
+              width: 40, // Fixed width for the unit to ensure alignment
+              child: DisplayExpression(context: context, expression: unit!, scale: 1.5)
+          ) else SizedBox.shrink()
         ],
       ),
     );
