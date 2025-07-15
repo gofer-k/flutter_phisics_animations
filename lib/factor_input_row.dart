@@ -8,7 +8,7 @@ class FactorInputRow extends StatelessWidget {
   final TextEditingController controller;
   final String? hintText;
   final TextInputType keyboardType;
-  final ValueChanged<String>? onChanged; // Callback for when the value changes
+  final ValueChanged<String>? onSubmitted; // Callback for when the value changes
   final List<TextInputFormatter>? inputFormatters;
 
   const FactorInputRow({
@@ -18,7 +18,7 @@ class FactorInputRow extends StatelessWidget {
     required this.controller,
     this.hintText,
     this.keyboardType = TextInputType.number,
-    this.onChanged,
+    this.onSubmitted,
     this.inputFormatters,
   });
 
@@ -44,7 +44,7 @@ class FactorInputRow extends StatelessWidget {
                 border: const OutlineInputBorder(),
               ),
               keyboardType: keyboardType,
-              onChanged: onChanged,
+              onSubmitted: onSubmitted,
               inputFormatters: inputFormatters ?? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], // Default: allow numbers and one dot
               textAlign: TextAlign.end, // Align text to the right, closer to the unit
             ),
