@@ -72,9 +72,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
-  double _currentStartArea = 20.0;
-  double _currentEndArea = 50.0;
-  double _currentStartHigh = 1.5;
+  double _currentStartArea = 30.0;
+  double _currentEndArea = 20.0;
+  double _currentStartHigh = 0.0;
   double _currentEndHigh = 0.10;
   double _currentStartSpeedFlow = 4.0;
   double _currentStartPressure = 1000.0;
@@ -93,20 +93,15 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _startSpeedFlowController = TextEditingController(text: _currentStartSpeedFlow.toString());
     _startPressureController = TextEditingController(text: _currentStartPressure.toString());
 
-    // Listener to update BernoulliPainter when values change (example for one controller)
-    _startAreaController.addListener(_updatePainterParameters);
-    _endAreaController.addListener(_updatePainterParameters);
-    _startHighController.addListener(_updatePainterParameters);
-    _endHighController.addListener(_updatePainterParameters);
-    _startSpeedFlowController.addListener(_updatePainterAndAnimationParameters);
-    _startPressureController.addListener(_updatePainterAndAnimationParameters);
+    final int durationMilliSecs = _updateAnimationDdration();
 
     _curveAnimationController = AnimationController(
       vsync: this, // Requires SingleTickerProviderStateMixin
-      duration: Duration(milliseconds: _initAnimationDurationMilliSecs), // Duration for the curve drawing animation
+
+      duration: Duration(milliseconds: durationMilliSecs), // Duration for the curve drawing animation
     );
     _rebuildCurveAnimation();
-        // Optionally start the animation immediately
+    // Optionally start the animation immediately
     // _curveAnimationController.forward();
   }
 
@@ -137,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     });
   }
   
-  void _updatePainterParameters() {
+  void durationMilliSecs() {
     // Try to parse values and update state, then call setState to redraw CustomPaint
     setState(() {
       _currentStartArea = double.tryParse(_startAreaController.text) ?? _currentStartArea;
@@ -150,153 +145,234 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       _rebuildCurveAnimation();
     });
   }
-  
-  void _updatePainterAndAnimationParameters() {
-    setState(() {
-      final int animationDuration = updateAnimationDdration();
-      
-      // Update other parameters as well if they are linked or for consistency
-      _updatePainterParameters();
 
-      // If animation duration changes, we need to update the AnimationController
-      _curveAnimationController.duration = Duration(milliseconds: animationDuration);
-      // If the animation is running, you might want to stop and restart it,
-      // or let it finish its current cycle with the old duration.
-      // For simplicity, changing duration will apply on next _startCurveAnimation.
-    });
+  int _updateAnimationDdration() {
+    return (_initStartSpeedFlow / _currentStartSpeedFlow * _initAnimationDurationMilliSecs).round();
   }
 
-  int updateAnimationDdration() => (_currentStartSpeedFlow / _initStartSpeedFlow * _initAnimationDurationMilliSecs) as int;
-  
+  void _handleStartSpeedSubmit(String value) {
+    if (!mounted) return;
+
+    final double? newSpeed = double.tryParse(value);
+    if (newSpeed != null && newSpeed > 0) {
+      setState(() {
+        _currentStartSpeedFlow = newSpeed;
+        final int duration = _updateAnimationDdration();
+        _curveAnimationController.duration = Duration(milliseconds: duration);
+      });
+      _startCurveAnimation(); // Restart animation with new duration
+    } else {
+      // Optionally, revert to old value or show an error
+      _startSpeedFlowController.text = _currentStartSpeedFlow.toString();
+    }
+  }
+
+  void _handleStartAreaSubmit(String value) {
+    if (!mounted) return;
+    final double? newArea = double.tryParse(value);
+    if (newArea != null && newArea >= 0) {
+      setState(() {
+        _currentStartArea = newArea;
+        _startAreaController.text = _currentStartArea.toString();
+      });
+      _startCurveAnimation();
+    } else {
+      _startAreaController.text = _currentStartArea.toString();
+    }
+  }
+
+  void _handleEndAreaSubmit(String value) {
+      if (!mounted) return;
+      final double? newArea = double.tryParse(value);
+      if (newArea != null && newArea >= 0) { // Assuming area can't be negative
+        setState(() {
+          _currentEndArea = newArea;
+          _endAreaController.text = _currentEndArea.toString(); // Update controller text
+        });
+        _startCurveAnimation();
+      } else {
+        _endAreaController.text = _currentEndArea.toString();
+      }
+    }
+
+  void _handleStartPressureSubmit(String value) {
+      if (!mounted) return;
+      final double? newPressure = double.tryParse(value);
+      if (newPressure != null && newPressure >= 0) { // Assuming area can't be negative
+        setState(() {
+          _currentStartPressure = newPressure;
+          _startPressureController.text = _currentStartPressure.toString(); // Update controller text
+        });
+        _startCurveAnimation();
+      } else {
+        _startPressureController.text = _currentStartPressure.toString();
+      }
+    }
+
+  void _handleStartHighSubmit(String value) {
+      if (!mounted) return;
+      final double? newHighLevel = double.tryParse(value);
+      if (newHighLevel != null && newHighLevel >= 0) { // Assuming area can't be negative
+        setState(() {
+          _currentStartHigh = newHighLevel;
+          _startHighController.text = _currentStartHigh.toString(); // Update controller text
+        });
+        _startCurveAnimation();
+      } else {
+        _startHighController.text = _currentStartHigh.toString();
+      }
+    }
+
+  void _handleEndHighSubmit(String value) {
+    if (!mounted) return;
+    final double? newHighLevel = double.tryParse(value);
+    if (newHighLevel != null && newHighLevel >= 0) { // Assuming area can't be negative
+      setState(() {
+        _currentEndHigh = newHighLevel;
+        _endHighController.text = _currentEndHigh.toString(); // Update controller text
+      });
+      _startCurveAnimation();
+    } else {
+      _endHighController.text = _currentEndHigh.toString();
+    }
+  }
+
   // Add a method to start/restart the animation if needed
   void _startCurveAnimation() {
-    _curveAnimationController.reset();
-    _curveAnimationController.forward();
-  }
+      _curveAnimationController.reset();
+      _curveAnimationController.forward();
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    // Get the screen width
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double widgetWidth = screenWidth * 0.90; // 90% of screen width
+    @override
+    Widget build(BuildContext context) {
+      // Get the screen width
+      final double screenWidth = MediaQuery.of(context).size.width;
+      final double widgetWidth = screenWidth * 0.90; // 90% of screen width
 
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        // https://pl.wikipedia.org/wiki/R%C3%B3wnanie_Bernoulliego
-        title: Text("ogólna postać formuli Bernoulli"),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center, // Center column content
-          children: <Widget>[
-            DisplayExpression(
-                context: context,
-                expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.5),
-            Divider(),
-            const SizedBox(height: 10), // Add some spacing
-            Container( // Optional: Add a border to see the CustomPaint area
-              width: widgetWidth,
-              height: 250,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                color: Colors.grey.shade200, // Light background for the graph
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: CustomPaint(
-                size: const Size(250, 250),
-                painter: BernoulliPainter(
-                  curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
-                  animationProgress: _curveAnimation.value, // From your AnimationController
-                  originalCurveColor: Colors.deepPurple,
-                  offsetCurveColor: Colors.orangeAccent,
-                  strokeWidth: 1.5,
-                  startPipeRadius: 20.0, // How far apart the parallel lines are
-                  endPipeRadius: 10.0,
-                  segments: 100, // Increase for smoother parallels
-                  dashPattern: const [20, 20], // Draw 15px, skip 8px
+      // This method is rerun every time setState is called, for instance as done
+      // by the _incrementCounter method above.
+      //
+      // The Flutter framework has been optimized to make rerunning build methods
+      // fast, so that you can just rebuild anything that needs updating rather
+      // than having to individually change instances of widgets.
+      return Scaffold(
+        appBar: AppBar(
+          // TRY THIS: Try changing the color here to a specific color (to
+          // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+          // change color while the other colors stay the same.
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          // https://pl.wikipedia.org/wiki/R%C3%B3wnanie_Bernoulliego
+          title: Text("ogólna postać formuli Bernoulli"),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center, // Center column content
+            children: <Widget>[
+              DisplayExpression(
+                  context: context,
+                  expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.5),
+              Divider(),
+              const SizedBox(height: 10), // Add some spacing
+              Container( // Optional: Add a border to see the CustomPaint area
+                width: widgetWidth,
+                height: 250,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  color: Colors.grey.shade200, // Light background for the graph
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: CustomPaint(
+                  size: const Size(250, 250),
+                  painter: BernoulliPainter(
+                    curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
+                    animationProgress: _curveAnimation.value, // From your AnimationController
+                    originalCurveColor: Colors.deepPurple,
+                    offsetCurveColor: Colors.orangeAccent,
+                    strokeWidth: 1.5,
+                    startPipeArea: _currentStartArea, // How far apart the parallel lines are
+                    endPipeArea: _currentEndArea,
+                    segments: 100, // Increase for smoother parallels
+                    dashPattern: const [20, 20], // Draw 15px, skip 8px
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _startCurveAnimation, // Button to trigger/restart animation
-              child: const Text("Draw Curve"),
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
-            ),
-            DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
-            Padding( // Optional: Add padding around the Row
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'p_1', // Changed from p_1 to A_1 for Area
-                      controller: _startAreaController,
-                      onChanged: (_) => _updatePainterParameters(),
-                    ),
-                  ),
-                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'p_2', // Changed from p_2 to A_2 for Area
-                      controller: _endAreaController,
-                      onChanged: (_) => _updatePainterParameters(),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _startCurveAnimation, // Button to trigger/restart animation
+                child: const Text("Draw Curve"),
               ),
-            ),
-            DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
-            Padding( // Optional: Add padding around the Row
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'h_1', // Changed from p_1 to A_1 for Area
-                      controller: _startHighController,
-                      onChanged: (_) => _updatePainterParameters(),
-                    ),
-                  ),
-                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'h_2', // Changed from p_2 to A_2 for Area
-                      controller: _endHighController,
-                      onChanged: (_) => _updatePainterParameters(),
-                    ),
-                  ),
-                ],
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
               ),
-            ),
-            FactorInputRow(label: r'\text{Prędkość} V_1', unit: r'\frac{m}{s}',
-              controller: _startSpeedFlowController, onChanged: (_) => _updatePainterAndAnimationParameters(), keyboardType: TextInputType.number),
-            FactorInputRow(label: r'\text{Ciśnienie } p_1', unit: r'kPa',
-                controller: _startPressureController, onChanged: (_) => _updatePainterAndAnimationParameters(), keyboardType: TextInputType.number),
-
-            // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
-            const SizedBox(height: 20),
-          ],
+              DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
+              Padding( // Optional: Add padding around the Row
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'p_1', // Changed from p_1 to A_1 for Area
+                        controller: _startAreaController,
+                        onSubmitted: _handleStartAreaSubmit,
+                      ),
+                    ),
+                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'p_2', // Changed from p_2 to A_2 for Area
+                        controller: _endAreaController,
+                        onSubmitted: _handleEndAreaSubmit,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
+              Padding( // Optional: Add padding around the Row
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'h_1',
+                        controller: _startHighController,
+                        onSubmitted: _handleStartHighSubmit,
+                      ),
+                    ),
+                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'h_2',
+                        controller: _endHighController,
+                        onSubmitted: _handleEndHighSubmit,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FactorInputRow(
+                  label: r'\text{Prędkość} V_1',
+                  unit: r'\frac{m}{s}',
+                  controller: _startSpeedFlowController,
+                  onSubmitted: _handleStartSpeedSubmit,
+              ),
+              FactorInputRow(
+                label: r'\text{Ciśnienie } p_1',
+                unit: r'kPa',
+                controller: _startPressureController,
+                onSubmitted: _handleStartPressureSubmit,
+              ),
+              // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
-}

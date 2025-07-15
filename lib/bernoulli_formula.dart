@@ -10,8 +10,8 @@ class BernoulliPainter extends CustomPainter {
   final Color originalCurveColor;
   final Color offsetCurveColor;
   final double strokeWidth;
-  final double startPipeRadius; // How far to offset the parallel curves
-  final double endPipeRadius; // How far to offset the parallel curves
+  final double startPipeArea; // How far to offset the parallel curves
+  final double endPipeArea; // How far to offset the parallel curves
   final int segments; // Number of segments to approximate the parallel curve
   final List<double> dashPattern;
 
@@ -21,8 +21,8 @@ class BernoulliPainter extends CustomPainter {
     this.originalCurveColor = Colors.blue,
     this.offsetCurveColor = Colors.green,
     this.strokeWidth = 2.0,
-    required this.startPipeRadius,
-    required this.endPipeRadius,
+    required this.startPipeArea,
+    required this.endPipeArea,
     this.segments = 50, // More segments = smoother, but more computation
     required this.dashPattern,
   });
@@ -255,7 +255,7 @@ class BernoulliPainter extends CustomPainter {
             Offset(-tangent.vector.dy, tangent.vector.dx) :
             Offset(tangent.vector.dy, -tangent.vector.dx)).normalized(); // Normal vector
 
-          double offsetDistance = startPipeRadius + t * (endPipeRadius - startPipeRadius);
+          double offsetDistance = startPipeArea + t * (endPipeArea - startPipeArea);
           pathPoints.add(point + normal * offsetDistance);
         }
       }
@@ -281,8 +281,8 @@ class BernoulliPainter extends CustomPainter {
         oldDelegate.originalCurveColor != originalCurveColor ||
         oldDelegate.offsetCurveColor != offsetCurveColor ||
         oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.startPipeRadius != startPipeRadius ||
-        oldDelegate.endPipeRadius != endPipeRadius ||
+        oldDelegate.startPipeArea != startPipeArea ||
+        oldDelegate.endPipeArea != endPipeArea ||
         oldDelegate.segments != segments ||
         oldDelegate.dashPattern != dashPattern;
   }
