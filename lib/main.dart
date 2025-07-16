@@ -1,4 +1,5 @@
 import 'package:first_flutter_app/bernoulli_formula_anim.dart';
+import 'package:first_flutter_app/factor_slider.dart';
 import 'package:flutter/material.dart';
 
 import 'bernoulli_formula.dart';
@@ -58,9 +59,13 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
   late AnimationController _curveAnimationController;
   late Animation<double> _curveAnimation;
+
+  late AnimationController _expandController;
+  late Animation<double> _expandAnimation;
+  bool _isParametersExpanded = true;
 
   // Controllers for factor inputs
   late TextEditingController _startAreaController;
@@ -84,6 +89,20 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+
+    _expandController = AnimationController(
+      vsync: this, // from SingleTickerProviderStateMixin
+      duration: const Duration(milliseconds: 300),
+    );
+
+    // 3. Create Animation (e.g., CurvedAnimation for easing)
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeInOut,
+    );
+    if (_isParametersExpanded) {
+      _expandController.forward();
+    }
 
     // Initialize controllers with default values
     _startAreaController = TextEditingController(text: _currentStartArea.toString());
@@ -114,8 +133,19 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _startSpeedFlowController.dispose();
     _curveAnimationController.dispose();
     _startPressureController.dispose();
-    // ... (your existing dispose code)
+    _expandController.dispose();
     super.dispose();
+  }
+
+  void _toggleExpandParameters() {
+    setState(() {
+      _isParametersExpanded = !_isParametersExpanded;
+      if (_isParametersExpanded) {
+        _expandController.forward(); // Play animation to expand
+      } else {
+        _expandController.reverse(); // Play animation to collapse
+      }
+    });
   }
 
   // Helper method to build or rebuild the _curveAnimation
@@ -150,50 +180,36 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return (_initStartSpeedFlow / _currentStartSpeedFlow * _initAnimationDurationMilliSecs).round();
   }
 
-  void _handleStartSpeedSubmit(String value) {
+  void _handleStartSpeed(double value) {
     if (!mounted) return;
 
-    final double? newSpeed = double.tryParse(value);
-    if (newSpeed != null && newSpeed > 0) {
-      setState(() {
-        _currentStartSpeedFlow = newSpeed;
-        final int duration = _updateAnimationDdration();
-        _curveAnimationController.duration = Duration(milliseconds: duration);
-      });
-      _startCurveAnimation(); // Restart animation with new duration
-    } else {
-      // Optionally, revert to old value or show an error
-      _startSpeedFlowController.text = _currentStartSpeedFlow.toString();
-    }
+    setState(() {
+      _currentStartSpeedFlow = value;
+      final int duration = _updateAnimationDdration();
+      _curveAnimationController.duration = Duration(milliseconds: duration);
+    });
+    _startCurveAnimation(); // Restart animation with new duration
   }
 
-  void _handleStartAreaSubmit(String value) {
+  void _handleStartArea(double value) {
     if (!mounted) return;
-    final double? newArea = double.tryParse(value);
-    if (newArea != null && newArea >= 0) {
-      setState(() {
-        _currentStartArea = newArea;
-        _startAreaController.text = _currentStartArea.toString();
-      });
-      _startCurveAnimation();
-    } else {
+
+    setState(() {
+      _currentStartArea = value;
       _startAreaController.text = _currentStartArea.toString();
-    }
+    });
+    _startCurveAnimation(); // Restart animation with new duration
   }
 
-  void _handleEndAreaSubmit(String value) {
-      if (!mounted) return;
-      final double? newArea = double.tryParse(value);
-      if (newArea != null && newArea >= 0) { // Assuming area can't be negative
-        setState(() {
-          _currentEndArea = newArea;
-          _endAreaController.text = _currentEndArea.toString(); // Update controller text
-        });
-        _startCurveAnimation();
-      } else {
-        _endAreaController.text = _currentEndArea.toString();
-      }
-    }
+  void _handleEndArea(double value) {
+    if (!mounted) return;
+
+    setState(() {
+      _currentEndArea = value;
+      _endAreaController.text = _currentEndArea.toString();
+    });
+    _startCurveAnimation(); // Restart animation with new duration
+  }
 
   void _handleStartPressureSubmit(String value) {
       if (!mounted) return;
@@ -295,6 +311,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     strokeWidth: 1.5,
                     startPipeArea: _currentStartArea, // How far apart the parallel lines are
                     endPipeArea: _currentEndArea,
+                    startLevel: 20.0, // Where the parallel lines start,
+                    endLevel: 1.0,
                     segments: 100, // Increase for smoother parallels
                     dashPattern: const [20, 20], // Draw 15px, skip 8px
                   ),
@@ -306,69 +324,91 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 child: const Text("Draw Curve"),
               ),
               const Divider(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
+              // Anmation parameters
+              InkWell(onTap: _toggleExpandParameters,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Animation Parameters",
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Icon(
+                        _isParametersExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: 30.0,
+                        semanticLabel: _isParametersExpanded ? 'Collapse parameters' : 'Expand parameters',
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'p_1', // Changed from p_1 to A_1 for Area
-                        controller: _startAreaController,
-                        onSubmitted: _handleStartAreaSubmit,
+              SizeTransition(
+                axisAlignment: -1.0,
+                sizeFactor: _expandAnimation,
+                child: Column(
+                  children: [
+                    DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
+                    Padding( // Optional: Add padding around the Row
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Column(
+                        children: <Widget>[
+                          FactorSlider(
+                            label: r'p_1',
+                            initialValue: _currentStartArea,
+                            minValue: 10.0,
+                            maxValue: 50.0,
+                            onChanged: _handleStartArea,),
+                          FactorSlider(
+                            label: r'p_3',
+                            initialValue: _currentEndArea,
+                            minValue: 10.0,
+                            maxValue: 50.0,
+                            onChanged: _handleEndArea,),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'p_2', // Changed from p_2 to A_2 for Area
-                        controller: _endAreaController,
-                        onSubmitted: _handleEndAreaSubmit,
+                    DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
+                    Padding( // Optional: Add padding around the Row
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: FactorInputRow(
+                              label: r'h_1',
+                              controller: _startHighController,
+                              onSubmitted: _handleStartHighSubmit,
+                            ),
+                          ),
+                          const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                          Expanded(
+                            child: FactorInputRow(
+                              label: r'h_2',
+                              controller: _endHighController,
+                              onSubmitted: _handleEndHighSubmit,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    FactorSlider(
+                      label: r'\text{Prędkość} V_1 \frac{m}{s}',
+                      initialValue: _currentStartSpeedFlow,
+                      minValue: 0.0,
+                      maxValue: 20.0,
+                      onChanged: _handleStartSpeed,),
+                    FactorInputRow(
+                      label: r'\text{Ciśnienie } p_1',
+                      unit: r'kPa',
+                      controller: _startPressureController,
+                      onSubmitted: _handleStartPressureSubmit,
+                    ),
+                    //TODO::
+                    // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
                   ],
                 ),
               ),
-              DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'h_1',
-                        controller: _startHighController,
-                        onSubmitted: _handleStartHighSubmit,
-                      ),
-                    ),
-                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'h_2',
-                        controller: _endHighController,
-                        onSubmitted: _handleEndHighSubmit,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              FactorInputRow(
-                  label: r'\text{Prędkość} V_1',
-                  unit: r'\frac{m}{s}',
-                  controller: _startSpeedFlowController,
-                  onSubmitted: _handleStartSpeedSubmit,
-              ),
-              FactorInputRow(
-                label: r'\text{Ciśnienie } p_1',
-                unit: r'kPa',
-                controller: _startPressureController,
-                onSubmitted: _handleStartPressureSubmit,
-              ),
-              // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
               const SizedBox(height: 20),
             ],
           ),
