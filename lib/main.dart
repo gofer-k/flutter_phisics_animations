@@ -1,4 +1,5 @@
 import 'package:first_flutter_app/bernoulli_formula_anim.dart';
+import 'package:first_flutter_app/factor_slider.dart';
 import 'package:flutter/material.dart';
 
 import 'bernoulli_formula.dart';
@@ -58,9 +59,13 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
   late AnimationController _curveAnimationController;
   late Animation<double> _curveAnimation;
+
+  late AnimationController _expandController;
+  late Animation<double> _expandAnimation;
+  bool _isParametersExpanded = true;
 
   // Controllers for factor inputs
   late TextEditingController _startAreaController;
@@ -84,6 +89,20 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+
+    _expandController = AnimationController(
+      vsync: this, // from SingleTickerProviderStateMixin
+      duration: const Duration(milliseconds: 300),
+    );
+
+    // 3. Create Animation (e.g., CurvedAnimation for easing)
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeInOut,
+    );
+    if (_isParametersExpanded) {
+      _expandController.forward();
+    }
 
     // Initialize controllers with default values
     _startAreaController = TextEditingController(text: _currentStartArea.toString());
@@ -114,8 +133,19 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _startSpeedFlowController.dispose();
     _curveAnimationController.dispose();
     _startPressureController.dispose();
-    // ... (your existing dispose code)
+    _expandController.dispose();
     super.dispose();
+  }
+
+  void _toggleExpandParameters() {
+    setState(() {
+      _isParametersExpanded = !_isParametersExpanded;
+      if (_isParametersExpanded) {
+        _expandController.forward(); // Play animation to expand
+      } else {
+        _expandController.reverse(); // Play animation to collapse
+      }
+    });
   }
 
   // Helper method to build or rebuild the _curveAnimation
@@ -150,50 +180,36 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return (_initStartSpeedFlow / _currentStartSpeedFlow * _initAnimationDurationMilliSecs).round();
   }
 
-  void _handleStartSpeedSubmit(String value) {
+  void _handleStartSpeed(double value) {
     if (!mounted) return;
 
-    final double? newSpeed = double.tryParse(value);
-    if (newSpeed != null && newSpeed > 0) {
-      setState(() {
-        _currentStartSpeedFlow = newSpeed;
-        final int duration = _updateAnimationDdration();
-        _curveAnimationController.duration = Duration(milliseconds: duration);
-      });
-      _startCurveAnimation(); // Restart animation with new duration
-    } else {
-      // Optionally, revert to old value or show an error
-      _startSpeedFlowController.text = _currentStartSpeedFlow.toString();
-    }
+    setState(() {
+      _currentStartSpeedFlow = value;
+      final int duration = _updateAnimationDdration();
+      _curveAnimationController.duration = Duration(milliseconds: duration);
+    });
+    _startCurveAnimation(); // Restart animation with new duration
   }
 
-  void _handleStartAreaSubmit(String value) {
+  void _handleStartArea(double value) {
     if (!mounted) return;
-    final double? newArea = double.tryParse(value);
-    if (newArea != null && newArea >= 0) {
-      setState(() {
-        _currentStartArea = newArea;
-        _startAreaController.text = _currentStartArea.toString();
-      });
-      _startCurveAnimation();
-    } else {
+
+    setState(() {
+      _currentStartArea = value;
       _startAreaController.text = _currentStartArea.toString();
-    }
+    });
+    _startCurveAnimation(); // Restart animation with new duration
   }
 
-  void _handleEndAreaSubmit(String value) {
-      if (!mounted) return;
-      final double? newArea = double.tryParse(value);
-      if (newArea != null && newArea >= 0) { // Assuming area can't be negative
-        setState(() {
-          _currentEndArea = newArea;
-          _endAreaController.text = _currentEndArea.toString(); // Update controller text
-        });
-        _startCurveAnimation();
-      } else {
-        _endAreaController.text = _currentEndArea.toString();
-      }
-    }
+  void _handleEndArea(double value) {
+    if (!mounted) return;
+
+    setState(() {
+      _currentEndArea = value;
+      _endAreaController.text = _currentEndArea.toString();
+    });
+    _startCurveAnimation(); // Restart animation with new duration
+  }
 
   void _handleStartPressureSubmit(String value) {
       if (!mounted) return;

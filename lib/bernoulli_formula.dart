@@ -12,6 +12,8 @@ class BernoulliPainter extends CustomPainter {
   final double strokeWidth;
   final double startPipeArea; // How far to offset the parallel curves
   final double endPipeArea; // How far to offset the parallel curves
+  final double startLevel;
+  final double endLevel;
   final int segments; // Number of segments to approximate the parallel curve
   final List<double> dashPattern;
 
@@ -23,6 +25,8 @@ class BernoulliPainter extends CustomPainter {
     this.strokeWidth = 2.0,
     required this.startPipeArea,
     required this.endPipeArea,
+    required this.startLevel,
+    required this.endLevel,
     this.segments = 50, // More segments = smoother, but more computation
     required this.dashPattern,
   });
@@ -36,19 +40,43 @@ class BernoulliPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // --- 1. Define and get the full original path ---
-    final Path fullPath = Path();
-    final Offset p0 = Offset(0, size.height);
-    final Offset p3 = Offset(size.width, 0);
-    final Offset cp1 = Offset(
-        curve.b * size.width, size.height - (curve.a * size.height));
-    final Offset cp2 = Offset(
-        curve.d * size.width, size.height - (curve.c * size.height));
+    final Path path = Path();
 
-    fullPath.moveTo(p0.dx, p0.dy);
-    fullPath.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, p3.dx, p3.dy);
+    // -- Sigmoid function shape
+    // S(x)= 1 / (1 e^(-x))
+    final Offset centerPoint = Offset(size.width / 2, size.height / 2);
+
+    // Generate the points for the sigmoid function
+    final double xMin = -1;
+    final double xMax = 1;
+    final double yRange = 0.5;
+    final int segments = 100;
+    final double xRange = xMax - xMin;
+
+    final double desiredCurveWidthInViewport = size.width * 0.8;
+    final double xScale = desiredCurveWidthInViewport / xRange;
+    final yScale = centerPoint.dy - size.height - startLevel;
+
+    final List<Offset> points = List.generate(segments + 1, (i) {
+      final double xNorm = (i / segments) * xRange + xMin;
+      final double y = 1.0 / (1.0 + math.exp(-xNorm * 20)); // Multiplying by 5 makes it steep
+      // Map y from [0, 1] to [-yRange / 2, yRange / 2] to center it vertically
+      // and then scale by our desired visual height (yScale)
+      final double yInViewportSpace = (y - 0.5) * yRange * yScale;
+      // Scale the normalizedX to the desired width in viewport
+      final double xInViewportSpace = xNorm * xScale;
+      // Translate to viewport center
+      return Offset(centerPoint.dx + xInViewportSpace, centerPoint.dy + yInViewportSpace);
+    });
+
+    path.moveTo(points.first.dx, points.first.dy);
+    for (Offset p in points.skip(1)) {
+      path.lineTo(p.dx, p.dy);
+    }
+    canvas.drawPath(path, offsetPaint);
 
     Path animatedOriginalPath = Path();
-    for (ui.PathMetric pathMetric in fullPath.computeMetrics()) {
+    for (ui.PathMetric pathMetric in path.computeMetrics()) {
       animatedOriginalPath.addPath(
           pathMetric.extractPath(
               0.0, pathMetric.length * animationProgress.clamp(0.0, 1.0)),
@@ -56,8 +84,8 @@ class BernoulliPainter extends CustomPainter {
     }
 
     // Calculate and draw parallel paths (only if there's something to draw) ---
-    List<Offset> leftBorderPoints = _generateBoardPaths(fullPath.computeMetrics(), true); // For one side
-    List<Offset> rightBorderPoints = _generateBoardPaths(fullPath.computeMetrics(), false); // For the other side
+    List<Offset> leftBorderPoints = _generateBoardPaths(path.computeMetrics(), true); // For one side
+    List<Offset> rightBorderPoints = _generateBoardPaths(path.computeMetrics(), false); // For the other side
 
     // --- Draw the Flow Path (Animated Segment) ---
     if (animationProgress > 0) { // Only start drawing flow after animation begins
