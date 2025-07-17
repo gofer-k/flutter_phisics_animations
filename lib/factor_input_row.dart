@@ -25,16 +25,17 @@ class FactorInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Expanded(
             flex: 2, // Give more space to the label
             child: DisplayExpression(context: context, expression: label, scale: 1.5),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
-            flex: 3, // Give more space to the text field
+            flex: 2, // Give more space to the text field
             child: TextField(
               controller: controller,
               decoration: InputDecoration(

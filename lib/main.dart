@@ -326,7 +326,7 @@ Widget build(BuildContext context) {
           
           const Divider(),
           
-          // animationParameters(),
+          animationParameters(),
 
           const SizedBox(height: 20),
         ],
@@ -383,7 +383,7 @@ Widget build(BuildContext context) {
       children: [
         InkWell(onTap: _toggleExpandParameters,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 4.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -411,13 +411,13 @@ Widget build(BuildContext context) {
                 child: Column(
                   children: <Widget>[
                     FactorSlider(
-                      label: r'p_1',
+                      label: r'a_1',
                       initialValue: _currentStartArea,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleStartArea,),
                     FactorSlider(
-                      label: r'p_3',
+                      label: r'a_2',
                       initialValue: _currentEndArea,
                       minValue: 10.0,
                       maxValue: 50.0,
@@ -425,6 +425,12 @@ Widget build(BuildContext context) {
                   ],
                 ),
               ),
+              FactorSlider(
+                label: r'\text{Prędkość } V_1 \frac{m}{s}',
+                initialValue: _currentStartSpeedFlow,
+                minValue: 0.0,
+                maxValue: 20.0,
+                onChanged: _handleStartSpeed,),
               DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
               Padding( // Optional: Add padding around the Row
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -448,15 +454,8 @@ Widget build(BuildContext context) {
                   ],
                 ),
               ),
-              FactorSlider(
-                label: r'\text{Prędkość} V_1 \frac{m}{s}',
-                initialValue: _currentStartSpeedFlow,
-                minValue: 0.0,
-                maxValue: 20.0,
-                onChanged: _handleStartSpeed,),
               FactorInputRow(
-                label: r'\text{Ciśnienie } p_1',
-                unit: r'kPa',
+                label: r'\text{Ciśnienie } p_1 [kPa]',
                 controller: _startPressureController,
                 onSubmitted: _handleStartPressureSubmit,
               ),
