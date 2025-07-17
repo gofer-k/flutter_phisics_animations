@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'bernoulli_formula.dart';
 import 'display_expression.dart';
 import 'factor_input_row.dart';
+import 'factor_slider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -147,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
       }
     });
   }
-
+  
   // Helper method to build or rebuild the _curveAnimation
   void _rebuildCurveAnimation() {
     _curveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -188,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
       final int duration = _updateAnimationDdration();
       _curveAnimationController.duration = Duration(milliseconds: duration);
     });
-    _startCurveAnimation(); // Restart animation with new duration
+    _toggleCurveAnimation(); // Restart animation with new duration
   }
 
   void _handleStartArea(double value) {
@@ -198,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
       _currentStartArea = value;
       _startAreaController.text = _currentStartArea.toString();
     });
-    _startCurveAnimation(); // Restart animation with new duration
+    _toggleCurveAnimation(); // Restart animation with new duration
   }
 
   void _handleEndArea(double value) {
@@ -208,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
       _currentEndArea = value;
       _endAreaController.text = _currentEndArea.toString();
     });
-    _startCurveAnimation(); // Restart animation with new duration
+    _toggleCurveAnimation(); // Restart animation with new duration
   }
 
   void _handleStartPressureSubmit(String value) {
@@ -219,7 +220,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
           _currentStartPressure = newPressure;
           _startPressureController.text = _currentStartPressure.toString(); // Update controller text
         });
-        _startCurveAnimation();
+        _toggleCurveAnimation();
       } else {
         _startPressureController.text = _currentStartPressure.toString();
       }
@@ -233,7 +234,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
           _currentStartHigh = newHighLevel;
           _startHighController.text = _currentStartHigh.toString(); // Update controller text
         });
-        _startCurveAnimation();
+        _toggleCurveAnimation();
       } else {
         _startHighController.text = _currentStartHigh.toString();
       }
@@ -247,197 +248,224 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
         _currentEndHigh = newHighLevel;
         _endHighController.text = _currentEndHigh.toString(); // Update controller text
       });
-      _startCurveAnimation();
+      _toggleCurveAnimation();
     } else {
       _endHighController.text = _currentEndHigh.toString();
     }
   }
 
   // Add a method to start/restart the animation if needed
-  void _startCurveAnimation() {
-      _curveAnimationController.reset();
-      _curveAnimationController.forward();
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      // Get the screen width
-      final deviceData = MediaQuery.of(context);
-
-      final Size screenSize = deviceData.size;
-
-      // Define breakpoints for different screen sizes
-      double breakpointSmall = 600.0;
-      double breakpointMedium = 900.0;
-
-      // Choose the appropriate layout based on screen width
-      Widget content;
-      if (screenSize.width < breakpointSmall) {
-        content = buildMobileLayout();
+  void _toggleCurveAnimation() {
+    setState(() {
+      if (_curveAnimationController.isAnimating) {
+        _curveAnimationController.stop();
       }
-      // else if (screenSize.width < breakpointMedium) {
-      //   // content = buildTabletLayout();
-      // }
+      else if (_curveAnimationController.isCompleted) {
+        _curveAnimationController.reset();
+      }
       else {
-        content = buildDesktopLayout();
+        _curveAnimationController.forward();
       }
+    });
+  }
 
-      return SafeArea(child:
-        Scaffold(
-          appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: Text("ogólna postać formuli Bernoulli"),
-          ),
-          body: Center(
-            child: Container(
-              width: screenSize.width * 0.9,
-              color: Colors.white,
-              child: content,
-            ),
-          )
-        )
-      );
+  @override
+Widget build(BuildContext context) {
+    // Get the screen width
+    final deviceData = MediaQuery.of(context);
 
-      // This method is rerun every time setState is called, for instance as done
-      // by the _incrementCounter method above.
-      //
-      // The Flutter framework has been optimized to make rerunning build methods
-      // fast, so that you can just rebuild anything that needs updating rather
-      // than having to individually change instances of widgets.
+    final Size screenSize = deviceData.size;
+
+    // Define breakpoints for different screen sizes
+    double breakpointSmall = 600.0;
+    double breakpointMedium = 900.0;
+
+    // Choose the appropriate layout based on screen width
+    Widget content;
+    if (screenSize.width < breakpointSmall) {
+      content = buildMobileLayout(screenSize);
+    }
+    // else if (screenSize.width < breakpointMedium) {
+    //   // content = buildTabletLayout();
+    // }
+    else {
+      content = buildDesktopLayout();
     }
 
-    Widget buildMobileLayout() {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center, // Center column content
-          children: <Widget>[
-            DisplayExpression(
-                context: context,
-                expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}',
-                scale: 1.5),
-            Divider(),
-            const SizedBox(height: 10), // Add some spacing
+    return SafeArea(child:
+      Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text("Ogólna postać formuli Bernoulli"),
+        ),
+        body: Center(
+          child: Container(
+            width: screenSize.width * 0.9,
+            color: Colors.white,
+            child: content,
+          ),
+        )
+      )
+    );
+  }
 
-            animationContainer(),
+  Widget buildMobileLayout(Size screenSize) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // Center column content
+        children: <Widget>[
+          DisplayExpression(
+              context: context,
+              expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.5),
+          Divider(),
+          const SizedBox(height: 10), // Add some spacing
+          
+          animationPlaybackPanel(Size(screenSize.width * 0.8, 250)),
+          
+          const Divider(),
+          
+          // animationParameters(),
 
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget buildDesktopLayout() {
+    return Text("Desktop content display here");
+  }
+  
+  Widget animationPlaybackPanel(Size animationSize) {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade400),
+            color: Colors.grey.shade200, // Light background for the graph
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: CustomPaint(
+            size: animationSize,
+            painter: BernoulliPainter(
+              curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
+              animationProgress: _curveAnimation.value, // From your AnimationController
+              originalCurveColor: Colors.deepPurple,
+              offsetCurveColor: Colors.orangeAccent,
+              strokeWidth: 1.5,
+              startPipeArea: _currentStartArea, // How far apart the parallel lines are
+              endPipeArea: _currentEndArea,
+              startLevel: 20.0, // Where the parallel lines start,
+              endLevel: 1.0,
+              segments: 100, // Increase for smoother parallels
+              dashPattern: const [20, 20], // Draw 15px, skip 8px
             ),
-            DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
-            Padding( // Optional: Add padding around the Row
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'p_1', // Changed from p_1 to A_1 for Area
-                      controller: _startAreaController,
-                      onSubmitted: _handleStartAreaSubmit,
-                    ),
-                  ),
-                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'p_2', // Changed from p_2 to A_2 for Area
-                      controller: _endAreaController,
-                      onSubmitted: _handleEndAreaSubmit,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+        ),
+        // const SizedBox(height: 6),
+        Row(mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _toggleCurveAnimation, // Button to trigger/restart animation
+              child: Icon(
+                _curveAnimationController.isAnimating ? Icons.pause : Icons.play_arrow),
             ),
-            DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
-            Padding( // Optional: Add padding around the Row
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'h_1',
-                      controller: _startHighController,
-                      onSubmitted: _handleStartHighSubmit,
-                    ),
-                  ),
-                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                  Expanded(
-                    child: FactorInputRow(
-                      label: r'h_2',
-                      controller: _endHighController,
-                      onSubmitted: _handleEndHighSubmit,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            FactorInputRow(
-              label: r'\text{Prędkość} V_1',
-              unit: r'\frac{m}{s}',
-              controller: _startSpeedFlowController,
-              onSubmitted: _handleStartSpeedSubmit,
-            ),
-            FactorInputRow(
-              label: r'\text{Ciśnienie } p_1',
-              unit: r'kPa',
-              controller: _startPressureController,
-              onSubmitted: _handleStartPressureSubmit,
-            ),
-            // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
-            const SizedBox(height: 20),
           ],
         ),
-      );
-    }
+      ],
+    );
+  }
 
-    Widget buildDesktopLayout() {
-      // TODO: implement here
-      return GridView(
-          gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+  Widget animationParameters() {
+    return Column(
       children: [
-        Text("gfrge"),
-      ],);
-    }
-
-    Widget animationContainer() {
-      return Container( // Optional: Add a border to see the CustomPaint area
-        height: 250,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400),
-          color: Colors.grey.shade200, // Light background for the graph
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column (
-          children: [
-            CustomPaint(
-              size: const Size(250, 250),
-              painter: BernoulliPainter(
-                curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
-                animationProgress: _curveAnimation.value, // From your AnimationController
-                originalCurveColor: Colors.deepPurple,
-                offsetCurveColor: Colors.orangeAccent,
-                strokeWidth: 1.5,
-                startPipeArea: _currentStartArea, // How far apart the parallel lines are
-                endPipeArea: _currentEndArea,
-                segments: 100, // Increase for smoother parallels
-                dashPattern: const [20, 20], // Draw 15px, skip 8px
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        InkWell(onTap: _toggleExpandParameters,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
-                  onPressed: _startCurveAnimation, // Button to trigger/restart animation
-                  child: const Text("Draw Curve"),
-                )
+                Text(
+                  "Animation Parameters",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Icon(
+                  _isParametersExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 30.0,
+                  semanticLabel: _isParametersExpanded ? 'Collapse parameters' : 'Expand parameters',
+                ),
               ],
             ),
-          ],
+          ),
         ),
-      );
-    }
+        SizeTransition(
+          axisAlignment: -1.0,
+          sizeFactor: _expandAnimation,
+          child: Column(
+            children: [
+              DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
+              Padding( // Optional: Add padding around the Row
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  children: <Widget>[
+                    FactorSlider(
+                      label: r'p_1',
+                      initialValue: _currentStartArea,
+                      minValue: 10.0,
+                      maxValue: 50.0,
+                      onChanged: _handleStartArea,),
+                    FactorSlider(
+                      label: r'p_3',
+                      initialValue: _currentEndArea,
+                      minValue: 10.0,
+                      maxValue: 50.0,
+                      onChanged: _handleEndArea,),
+                  ],
+                ),
+              ),
+              DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
+              Padding( // Optional: Add padding around the Row
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'h_1',
+                        controller: _startHighController,
+                        onSubmitted: _handleStartHighSubmit,
+                      ),
+                    ),
+                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                    Expanded(
+                      child: FactorInputRow(
+                        label: r'h_2',
+                        controller: _endHighController,
+                        onSubmitted: _handleEndHighSubmit,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FactorSlider(
+                label: r'\text{Prędkość} V_1 \frac{m}{s}',
+                initialValue: _currentStartSpeedFlow,
+                minValue: 0.0,
+                maxValue: 20.0,
+                onChanged: _handleStartSpeed,),
+              FactorInputRow(
+                label: r'\text{Ciśnienie } p_1',
+                unit: r'kPa',
+                controller: _startPressureController,
+                onSubmitted: _handleStartPressureSubmit,
+              ),
+              //TODO::
+              // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
