@@ -246,8 +246,41 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     @override
     Widget build(BuildContext context) {
       // Get the screen width
-      final double screenWidth = MediaQuery.of(context).size.width;
-      final double widgetWidth = screenWidth * 0.90; // 90% of screen width
+      final deviceData = MediaQuery.of(context);
+
+      final Size screenSize = deviceData.size;
+
+      // Define breakpoints for different screen sizes
+      double breakpointSmall = 600.0;
+      double breakpointMedium = 900.0;
+
+      // Choose the appropriate layout based on screen width
+      Widget content;
+      if (screenSize.width < breakpointSmall) {
+        content = buildMobileLayout();
+      }
+      // else if (screenSize.width < breakpointMedium) {
+      //   // content = buildTabletLayout();
+      // }
+      else {
+        content = buildDesktopLayout();
+      }
+
+      return SafeArea(child:
+        Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            title: Text("ogólna postać formuli Bernoulli"),
+          ),
+          body: Center(
+            child: Container(
+              width: screenSize.width * 0.9,
+              color: Colors.white,
+              child: content,
+            ),
+          )
+        )
+      );
 
       // This method is rerun every time setState is called, for instance as done
       // by the _incrementCounter method above.
@@ -255,124 +288,140 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       // The Flutter framework has been optimized to make rerunning build methods
       // fast, so that you can just rebuild anything that needs updating rather
       // than having to individually change instances of widgets.
-      return Scaffold(
-        appBar: AppBar(
-          // TRY THIS: Try changing the color here to a specific color (to
-          // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-          // change color while the other colors stay the same.
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          // https://pl.wikipedia.org/wiki/R%C3%B3wnanie_Bernoulliego
-          title: Text("ogólna postać formuli Bernoulli"),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center, // Center column content
-            children: <Widget>[
-              DisplayExpression(
-                  context: context,
-                  expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.5),
-              Divider(),
-              const SizedBox(height: 10), // Add some spacing
-              Container( // Optional: Add a border to see the CustomPaint area
-                width: widgetWidth,
-                height: 250,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  color: Colors.grey.shade200, // Light background for the graph
-                ),
-                clipBehavior: Clip.hardEdge,
-                child: CustomPaint(
-                  size: const Size(250, 250),
-                  painter: BernoulliPainter(
-                    curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
-                    animationProgress: _curveAnimation.value, // From your AnimationController
-                    originalCurveColor: Colors.deepPurple,
-                    offsetCurveColor: Colors.orangeAccent,
-                    strokeWidth: 1.5,
-                    startPipeArea: _currentStartArea, // How far apart the parallel lines are
-                    endPipeArea: _currentEndArea,
-                    segments: 100, // Increase for smoother parallels
-                    dashPattern: const [20, 20], // Draw 15px, skip 8px
+    }
+
+    Widget buildMobileLayout() {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center, // Center column content
+          children: <Widget>[
+            DisplayExpression(
+                context: context,
+                expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}',
+                scale: 1.5),
+            Divider(),
+            const SizedBox(height: 10), // Add some spacing
+
+            animationContainer(),
+
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
+            ),
+            DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
+            Padding( // Optional: Add padding around the Row
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: FactorInputRow(
+                      label: r'p_1', // Changed from p_1 to A_1 for Area
+                      controller: _startAreaController,
+                      onSubmitted: _handleStartAreaSubmit,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _startCurveAnimation, // Button to trigger/restart animation
-                child: const Text("Draw Curve"),
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text("Animation Parameters", style: Theme.of(context).textTheme.titleMedium),
-              ),
-              DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'p_1', // Changed from p_1 to A_1 for Area
-                        controller: _startAreaController,
-                        onSubmitted: _handleStartAreaSubmit,
-                      ),
+                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                  Expanded(
+                    child: FactorInputRow(
+                      label: r'p_2', // Changed from p_2 to A_2 for Area
+                      controller: _endAreaController,
+                      onSubmitted: _handleEndAreaSubmit,
                     ),
-                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'p_2', // Changed from p_2 to A_2 for Area
-                        controller: _endAreaController,
-                        onSubmitted: _handleEndAreaSubmit,
-                      ),
+                  ),
+                ],
+              ),
+            ),
+            DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
+            Padding( // Optional: Add padding around the Row
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: FactorInputRow(
+                      label: r'h_1',
+                      controller: _startHighController,
+                      onSubmitted: _handleStartHighSubmit,
                     ),
-                  ],
-                ),
-              ),
-              DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'h_1',
-                        controller: _startHighController,
-                        onSubmitted: _handleStartHighSubmit,
-                      ),
+                  ),
+                  const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                  Expanded(
+                    child: FactorInputRow(
+                      label: r'h_2',
+                      controller: _endHighController,
+                      onSubmitted: _handleEndHighSubmit,
                     ),
-                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
-                    Expanded(
-                      child: FactorInputRow(
-                        label: r'h_2',
-                        controller: _endHighController,
-                        onSubmitted: _handleEndHighSubmit,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              FactorInputRow(
-                  label: r'\text{Prędkość} V_1',
-                  unit: r'\frac{m}{s}',
-                  controller: _startSpeedFlowController,
-                  onSubmitted: _handleStartSpeedSubmit,
-              ),
-              FactorInputRow(
-                label: r'\text{Ciśnienie } p_1',
-                unit: r'kPa',
-                controller: _startPressureController,
-                onSubmitted: _handleStartPressureSubmit,
-              ),
-              // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+            FactorInputRow(
+              label: r'\text{Prędkość} V_1',
+              unit: r'\frac{m}{s}',
+              controller: _startSpeedFlowController,
+              onSubmitted: _handleStartSpeedSubmit,
+            ),
+            FactorInputRow(
+              label: r'\text{Ciśnienie } p_1',
+              unit: r'kPa',
+              controller: _startPressureController,
+              onSubmitted: _handleStartPressureSubmit,
+            ),
+            // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
+            const SizedBox(height: 20),
+          ],
         ),
       );
     }
-  }
+
+    Widget buildDesktopLayout() {
+      // TODO: implement here
+      return GridView(
+          gridDelegate:
+          SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+      children: [
+        Text("gfrge"),
+      ],);
+    }
+
+    Widget animationContainer() {
+      return Container( // Optional: Add a border to see the CustomPaint area
+        height: 250,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          color: Colors.grey.shade200, // Light background for the graph
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: Column (
+          children: [
+            CustomPaint(
+              size: const Size(250, 250),
+              painter: BernoulliPainter(
+                curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
+                animationProgress: _curveAnimation.value, // From your AnimationController
+                originalCurveColor: Colors.deepPurple,
+                offsetCurveColor: Colors.orangeAccent,
+                strokeWidth: 1.5,
+                startPipeArea: _currentStartArea, // How far apart the parallel lines are
+                endPipeArea: _currentEndArea,
+                segments: 100, // Increase for smoother parallels
+                dashPattern: const [20, 20], // Draw 15px, skip 8px
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _startCurveAnimation, // Button to trigger/restart animation
+                  child: const Text("Draw Curve"),
+                )
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+}
