@@ -60,13 +60,13 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late AnimationController _curveAnimationController;
   late Animation<double> _curveAnimation;
 
   late AnimationController _expandController;
-  late Animation<double> _expandAnimation;
-  bool _isParametersExpanded = true;
+  late Animation<double> _expandAnimationParameters;
+  bool _isInputParametersExpanded = true;
 
   // Controllers for factor inputs
   late TextEditingController _startAreaController;
@@ -74,15 +74,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
   late TextEditingController _startHighController;
   late TextEditingController _endHighController;
   late TextEditingController _startSpeedFlowController;
-  late TextEditingController _startPressureController;
+  late TextEditingController _pressureAtStartController;
+
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
-  double _currentStartArea = 30.0;
-  double _currentEndArea = 20.0;
+  double _areaAtBegning = 30.0;
+  double _areaAtEnd = 20.0;
   double _currentStartHigh = 0.0;
   double _currentEndHigh = 0.10;
-  double _currentStartSpeedFlow = 4.0;
+  double _startSpeedFlow = 4.0;
   double _currentStartPressure = 1000.0;
   final int _initAnimationDurationMilliSecs = 3000;
   final double _initStartSpeedFlow = 4.0;
@@ -97,28 +98,35 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
     );
 
     // 3. Create Animation (e.g., CurvedAnimation for easing)
-    _expandAnimation = CurvedAnimation(
+    _expandAnimationParameters = CurvedAnimation(
       parent: _expandController,
       curve: Curves.easeInOut,
     );
-    if (_isParametersExpanded) {
+    if (_isInputParametersExpanded) {
       _expandController.forward();
     }
 
     // Initialize controllers with default values
-    _startAreaController = TextEditingController(text: _currentStartArea.toString());
-    _endAreaController = TextEditingController(text: _currentEndArea.toString());
-    _startHighController = TextEditingController(text: _currentStartHigh.toString());
-    _endHighController = TextEditingController(text: _currentEndHigh.toString());
-    _startSpeedFlowController = TextEditingController(text: _currentStartSpeedFlow.toString());
-    _startPressureController = TextEditingController(text: _currentStartPressure.toString());
+    _startAreaController =
+        TextEditingController(text: _areaAtBegning.toString());
+    _endAreaController =
+        TextEditingController(text: _areaAtEnd.toString());
+    _startHighController =
+        TextEditingController(text: _currentStartHigh.toString());
+    _endHighController =
+        TextEditingController(text: _currentEndHigh.toString());
+    _startSpeedFlowController =
+        TextEditingController(text: _startSpeedFlow.toString());
+    _pressureAtStartController =
+        TextEditingController(text: _currentStartPressure.toString());
 
     final int durationMilliSecs = _updateAnimationDdration();
 
     _curveAnimationController = AnimationController(
       vsync: this, // Requires SingleTickerProviderStateMixin
 
-      duration: Duration(milliseconds: durationMilliSecs), // Duration for the curve drawing animation
+      duration: Duration(
+          milliseconds: durationMilliSecs), // Duration for the curve drawing animation
     );
     _rebuildCurveAnimation();
     // Optionally start the animation immediately
@@ -133,59 +141,69 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
     _endHighController.dispose();
     _startSpeedFlowController.dispose();
     _curveAnimationController.dispose();
-    _startPressureController.dispose();
+    _pressureAtStartController.dispose();
     _expandController.dispose();
     super.dispose();
   }
 
   void _toggleExpandParameters() {
     setState(() {
-      _isParametersExpanded = !_isParametersExpanded;
-      if (_isParametersExpanded) {
+      _isInputParametersExpanded = !_isInputParametersExpanded;
+      if (_isInputParametersExpanded) {
         _expandController.forward(); // Play animation to expand
       } else {
         _expandController.reverse(); // Play animation to collapse
       }
     });
   }
-  
+
   // Helper method to build or rebuild the _curveAnimation
   void _rebuildCurveAnimation() {
     _curveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _curveAnimationController,
-        curve: Curves.easeIn, // Let the BezierPainter handle the "curviness" of the draw
+        curve: Curves
+            .easeIn, // Let the BezierPainter handle the "curviness" of the draw
       ),
-    )..addListener(() {
-      setState(() {
-        // This will trigger a repaint of CustomPaint
+    )
+      ..addListener(() {
+        setState(() {
+          // This will trigger a repaint of CustomPaint
+        });
       });
-    });
   }
-  
+
   void durationMilliSecs() {
     // Try to parse values and update state, then call setState to redraw CustomPaint
     setState(() {
-      _currentStartArea = double.tryParse(_startAreaController.text) ?? _currentStartArea;
-      _currentEndArea = double.tryParse(_endAreaController.text) ?? _currentEndArea;
-      _currentStartHigh = double.tryParse(_startHighController.text) ?? _currentStartHigh;
-      _currentEndHigh = double.tryParse(_endHighController.text) ?? _currentEndHigh;
-      _currentStartSpeedFlow = double.tryParse(_startSpeedFlowController.text) ?? _currentStartSpeedFlow;
-      _currentStartPressure = double.tryParse(_startPressureController.text) ?? _currentStartPressure;
+      _areaAtBegning =
+          double.tryParse(_startAreaController.text) ?? _areaAtBegning;
+      _areaAtEnd =
+          double.tryParse(_endAreaController.text) ?? _areaAtEnd;
+      _currentStartHigh =
+          double.tryParse(_startHighController.text) ?? _currentStartHigh;
+      _currentEndHigh =
+          double.tryParse(_endHighController.text) ?? _currentEndHigh;
+      _startSpeedFlow =
+          double.tryParse(_startSpeedFlowController.text) ??
+              _startSpeedFlow;
+      _currentStartPressure = double.tryParse(_pressureAtStartController.text) ??
+          _currentStartPressure;
 
       _rebuildCurveAnimation();
     });
   }
 
   int _updateAnimationDdration() {
-    return (_initStartSpeedFlow / _currentStartSpeedFlow * _initAnimationDurationMilliSecs).round();
+    return (_initStartSpeedFlow / _startSpeedFlow *
+        _initAnimationDurationMilliSecs).round();
   }
 
   void _handleStartSpeed(double value) {
     if (!mounted) return;
 
     setState(() {
-      _currentStartSpeedFlow = value;
+      _startSpeedFlow = value;
       final int duration = _updateAnimationDdration();
       _curveAnimationController.duration = Duration(milliseconds: duration);
     });
@@ -196,8 +214,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
     if (!mounted) return;
 
     setState(() {
-      _currentStartArea = value;
-      _startAreaController.text = _currentStartArea.toString();
+      _areaAtBegning = value;
+      _startAreaController.text = _areaAtBegning.toString();
     });
     _toggleCurveAnimation(); // Restart animation with new duration
   }
@@ -206,47 +224,53 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
     if (!mounted) return;
 
     setState(() {
-      _currentEndArea = value;
-      _endAreaController.text = _currentEndArea.toString();
+      _areaAtEnd = value;
+      _endAreaController.text = _areaAtEnd.toString();
     });
     _toggleCurveAnimation(); // Restart animation with new duration
   }
 
   void _handleStartPressureSubmit(String value) {
-      if (!mounted) return;
-      final double? newPressure = double.tryParse(value);
-      if (newPressure != null && newPressure >= 0) { // Assuming area can't be negative
-        setState(() {
-          _currentStartPressure = newPressure;
-          _startPressureController.text = _currentStartPressure.toString(); // Update controller text
-        });
-        _toggleCurveAnimation();
-      } else {
-        _startPressureController.text = _currentStartPressure.toString();
-      }
+    if (!mounted) return;
+    final double? newPressure = double.tryParse(value);
+    if (newPressure != null &&
+        newPressure >= 0) { // Assuming area can't be negative
+      setState(() {
+        _currentStartPressure = newPressure;
+        _pressureAtStartController.text =
+            _currentStartPressure.toString(); // Update controller text
+      });
+      _toggleCurveAnimation();
+    } else {
+      _pressureAtStartController.text = _currentStartPressure.toString();
     }
+  }
 
   void _handleStartHighSubmit(String value) {
-      if (!mounted) return;
-      final double? newHighLevel = double.tryParse(value);
-      if (newHighLevel != null && newHighLevel >= 0) { // Assuming area can't be negative
-        setState(() {
-          _currentStartHigh = newHighLevel;
-          _startHighController.text = _currentStartHigh.toString(); // Update controller text
-        });
-        _toggleCurveAnimation();
-      } else {
-        _startHighController.text = _currentStartHigh.toString();
-      }
+    if (!mounted) return;
+    final double? newHighLevel = double.tryParse(value);
+    if (newHighLevel != null &&
+        newHighLevel >= 0) { // Assuming area can't be negative
+      setState(() {
+        _currentStartHigh = newHighLevel;
+        _startHighController.text =
+            _currentStartHigh.toString(); // Update controller text
+      });
+      _toggleCurveAnimation();
+    } else {
+      _startHighController.text = _currentStartHigh.toString();
     }
+  }
 
   void _handleEndHighSubmit(String value) {
     if (!mounted) return;
     final double? newHighLevel = double.tryParse(value);
-    if (newHighLevel != null && newHighLevel >= 0) { // Assuming area can't be negative
+    if (newHighLevel != null &&
+        newHighLevel >= 0) { // Assuming area can't be negative
       setState(() {
         _currentEndHigh = newHighLevel;
-        _endHighController.text = _currentEndHigh.toString(); // Update controller text
+        _endHighController.text =
+            _currentEndHigh.toString(); // Update controller text
       });
       _toggleCurveAnimation();
     } else {
@@ -268,9 +292,24 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
       }
     });
   }
+  
+  double _currentPressure() {
+    // todo: calculate current pressure of pipe
+    return 0.0;
+  }
 
+  double _currentLevel() {
+    // todo: calculate current level of pipe
+    return 0.0;
+  }
+
+  double _currentSpeedFlow() {
+    // todo: calculate current speed of flow
+    return 0.0;
+  }
+  
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     // Get the screen width
     final deviceData = MediaQuery.of(context);
 
@@ -325,9 +364,13 @@ Widget build(BuildContext context) {
           animationPlaybackPanel(Size(screenSize.width * 0.8, 250)),
           
           const Divider(),
-          
-          animationParameters(),
 
+          animationResultParameters(),
+
+          const Divider(),
+
+          animationInputParameters(),
+  
           const SizedBox(height: 20),
         ],
       ),
@@ -336,6 +379,16 @@ Widget build(BuildContext context) {
 
   Widget buildDesktopLayout() {
     return Text("Desktop content display here");
+  }
+  
+  Widget displayParameterResult(String label, String unit, double value) {
+    return Row(mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        DisplayExpression(context: context, expression: label, scale: 1.2),
+        Text(value.toString() + "\t"),
+        DisplayExpression(context: context, expression: unit, scale: 1.2)
+      ],
+    );
   }
   
   Widget animationPlaybackPanel(Size animationSize) {
@@ -355,8 +408,8 @@ Widget build(BuildContext context) {
               originalCurveColor: Colors.deepPurple,
               offsetCurveColor: Colors.orangeAccent,
               strokeWidth: 1.5,
-              startPipeArea: _currentStartArea, // How far apart the parallel lines are
-              endPipeArea: _currentEndArea,
+              startPipeArea: _areaAtBegning, // How far apart the parallel lines are
+              endPipeArea: _areaAtEnd,
               startLevel: 20.0, // Where the parallel lines start,
               endLevel: 1.0,
               segments: 100, // Increase for smoother parallels
@@ -378,7 +431,17 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget animationParameters() {
+  Widget animationResultParameters() {
+    return Column(
+      children: [
+        displayParameterResult(r'\text{p = }', r'kPa',  _currentPressure()),
+        displayParameterResult(r'\text{h = }', r'm', _currentLevel()),
+        displayParameterResult(r'\text{V = }', r'\frac{m}{s}', _currentSpeedFlow()),
+      ],
+    );
+  }
+  
+  Widget animationInputParameters() {
     return Column(
       children: [
         InkWell(onTap: _toggleExpandParameters,
@@ -392,9 +455,9 @@ Widget build(BuildContext context) {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 Icon(
-                  _isParametersExpanded ? Icons.expand_less : Icons.expand_more,
+                  _isInputParametersExpanded ? Icons.expand_less : Icons.expand_more,
                   size: 30.0,
-                  semanticLabel: _isParametersExpanded ? 'Collapse parameters' : 'Expand parameters',
+                  semanticLabel: _isInputParametersExpanded ? 'Collapse parameters' : 'Expand parameters',
                 ),
               ],
             ),
@@ -402,23 +465,23 @@ Widget build(BuildContext context) {
         ),
         SizeTransition(
           axisAlignment: -1.0,
-          sizeFactor: _expandAnimation,
+          sizeFactor: _expandAnimationParameters,
           child: Column(
             children: [
               DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Column(
                   children: <Widget>[
                     FactorSlider(
                       label: r'a_1',
-                      initialValue: _currentStartArea,
+                      initialValue: _areaAtBegning,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleStartArea,),
                     FactorSlider(
                       label: r'a_2',
-                      initialValue: _currentEndArea,
+                      initialValue: _areaAtEnd,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleEndArea,),
@@ -427,7 +490,7 @@ Widget build(BuildContext context) {
               ),
               FactorSlider(
                 label: r'\text{Prędkość } V_1 \frac{m}{s}',
-                initialValue: _currentStartSpeedFlow,
+                initialValue: _startSpeedFlow,
                 minValue: 0.0,
                 maxValue: 20.0,
                 onChanged: _handleStartSpeed,),
@@ -456,7 +519,7 @@ Widget build(BuildContext context) {
               ),
               FactorInputRow(
                 label: r'\text{Ciśnienie } p_1 [kPa]',
-                controller: _startPressureController,
+                controller: _pressureAtStartController,
                 onSubmitted: _handleStartPressureSubmit,
               ),
               //TODO::
@@ -467,4 +530,5 @@ Widget build(BuildContext context) {
       ],
     );
   }
+
 }
