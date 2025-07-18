@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
-  double _areaAtBegning = 30.0;
+  double _areaAtBeginning = 30.0;
   double _areaAtEnd = 20.0;
   double _currentStartHigh = 0.0;
   double _currentEndHigh = 0.10;
@@ -108,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     // Initialize controllers with default values
     _startAreaController =
-        TextEditingController(text: _areaAtBegning.toString());
+        TextEditingController(text: _areaAtBeginning.toString());
     _endAreaController =
         TextEditingController(text: _areaAtEnd.toString());
     _startHighController =
@@ -176,8 +176,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void durationMilliSecs() {
     // Try to parse values and update state, then call setState to redraw CustomPaint
     setState(() {
-      _areaAtBegning =
-          double.tryParse(_startAreaController.text) ?? _areaAtBegning;
+      _areaAtBeginning =
+          double.tryParse(_startAreaController.text) ?? _areaAtBeginning;
       _areaAtEnd =
           double.tryParse(_endAreaController.text) ?? _areaAtEnd;
       _currentStartHigh =
@@ -214,8 +214,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (!mounted) return;
 
     setState(() {
-      _areaAtBegning = value;
-      _startAreaController.text = _areaAtBegning.toString();
+      _areaAtBeginning = value;
+      _startAreaController.text = _areaAtBeginning.toString();
     });
     _toggleCurveAnimation(); // Restart animation with new duration
   }
@@ -408,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               originalCurveColor: Colors.deepPurple,
               offsetCurveColor: Colors.orangeAccent,
               strokeWidth: 1.5,
-              startPipeArea: _areaAtBegning, // How far apart the parallel lines are
+              startPipeArea: _areaAtBeginning, // How far apart the parallel lines are
               endPipeArea: _areaAtEnd,
               startLevel: 20.0, // Where the parallel lines start,
               endLevel: 1.0,
@@ -475,7 +475,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   children: <Widget>[
                     FactorSlider(
                       label: r'a_1',
-                      initialValue: _areaAtBegning,
+                      initialValue: _areaAtBeginning,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleStartArea,),
