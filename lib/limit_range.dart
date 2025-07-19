@@ -1,16 +1,36 @@
-class LimitRange<T> {
-  final T _begin;
-  final T _end;
-  T value;
+import 'dart:math' as math;
 
-  LimitRange({required this._begin, required this._end}),
+class LimitRange<T extends num> {
+  final T begin;
+  final T end;
 
-  T get begin => _begin;
-  T get end => _end;
+  T _value;
   T get value => _value;
   set value(T newValue) {
-    if (newValue < begin || newValue > end) {
-      throw ArgumentError('Value must be between $begin and $end');
+    if (newValue < begin) {
+      _value = begin;
+    } else if (newValue > end) {
+      _value = end;
+    } else {
+      _value = newValue;
     }
-    _value = newValue;
+  }
+
+  LimitRange({required this.begin, required this.end}) : _value = begin {
+    if (begin > end) {
+      throw ArgumentError('Begin must be less than end');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is LimitRange<double> &&
+        other.begin == begin &&
+        other.end == end &&
+        other._value == _value;
+  }
+
+  @override
+  int get hashCode => begin.hashCode ^ end.hashCode ^ _value.hashCode;
 }
