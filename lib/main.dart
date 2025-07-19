@@ -1,7 +1,7 @@
 import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
 import 'package:flutter/material.dart';
 
-import 'bernoulli_formula.dart';
+import 'bernoulli_painter.dart';
 import 'display_expression.dart';
 import 'factor_input_row.dart';
 import 'factor_slider.dart';
