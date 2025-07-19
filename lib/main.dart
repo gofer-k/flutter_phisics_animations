@@ -1,5 +1,4 @@
-import 'package:first_flutter_app/bernoulli_formula_anim.dart';
-import 'package:first_flutter_app/factor_slider.dart';
+import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
 import 'package:flutter/material.dart';
 
 import 'bernoulli_formula.dart';
@@ -403,7 +402,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           child: CustomPaint(
             size: animationSize,
             painter: BernoulliPainter(
-              curve: BernoulliFormulaAnim.ease, // Your custom Cubic curve
+              curve: BernoulliFormulaAnimCurve.ease, // Your custom Cubic curve
               animationProgress: _curveAnimation.value, // From your AnimationController
               originalCurveColor: Colors.deepPurple,
               offsetCurveColor: Colors.orangeAccent,
