@@ -1,24 +1,30 @@
-class PipePath {
-  typedef PathInMeters = List<double>;
+import 'dart:ui';
 
-  final PathInMeters _pathInMeters;
-  get pathInMeters => _pathInMeters;
+import 'package:first_flutter_app/limit_range.dart';
 
-  PipePath(duble lengthInMeters, double lengthInPixels, PathMetrics pathMetrics) {
-    if ( pathMetrics.isEmpty()) {
-      throw ArgumentError("PathMetrics is empty");
-    })
+typedef PathOffsetsInMeters = List<Offset>; // Collection of point from given function
+typedef PathInMeters = List<double>;        // Collection distances along the path in meters. Tight together with PathOffsetsInMeters
+typedef Range = LimitRange<double>;
 
-    if (lengthInMeters <= 0.0) {
-      throw ArgumentError("Length must be positive");
-    }
-    double pixelPerMeter = lengthInPixels / lengthInMeters;
-     double segmentLengthInMeters = segmentLengthInPixels / pixelsPerMeter;
+abstract class PipePath {
+  final Range _xRange;
+  Range get xRange => _xRange;
 
-    pathInMeters.add(0.0);
-    for (int i = 1; i < pathMetrics.length; i++) {
-      final double segmentLength = (pathMetrics[i] - pathMetrics[i - 1]) * pixelPerMeter;
-      pathInMeters.add(segmentLength);
-    }
+  final Range _yRange;
+  Range get yRange => _yRange;
+
+  final int _segments;
+  int get segments => _segments;
+
+  double get length;
+
+  PathOffsetsInMeters get pathOfPoints;
+  
+  PipePath(this._xRange, this._yRange, this._segments);
+
+  bool isEmpty() {
+    return pathOfPoints.isEmpty;
   }
+
+  void generate();
 }

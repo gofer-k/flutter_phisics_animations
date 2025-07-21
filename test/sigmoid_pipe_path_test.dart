@@ -3,10 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Assuming your SigmoidCurve class is in this path
 // Adjust the import path according to your project structure.
-import '../lib/sigmoid_pipe_path.dart';
-import '../lib/limit_range.dart';
+import 'package:first_flutter_app/sigmoid_pipe_path.dart';
 
-import 'dart:ui'; // For Offset
 import 'dart:math' as math;
 
 void main() {
@@ -25,7 +23,7 @@ void main() {
       final int segments = 10;
 
       final curve = SigmoidCurve(xRange, yRange, segments);
-      expect(curve.pathOffsetsInMeters.length, equals(segments + 1));
+      expect(curve.pathOfPoints.length, equals(segments + 1));
     });
 
     test('generate should correctly calculate first and last points', () {
@@ -34,7 +32,7 @@ void main() {
       final yRange = Range(begin: 0.0, end: 100.0); // yMid will be 50
       final curve = SigmoidCurve(xRange, yRange, segments);
 
-      final points = curve.pathOffsetsInMeters;
+      final points = curve.pathOfPoints;
 
       final double scaleNorm = 20.0;
       final double expectedFirstX = ((0 / segments) * (xRange.end - xRange.begin) + xRange.begin) * scaleNorm;
@@ -62,7 +60,7 @@ void main() {
       final yRange = Range(begin: 0.0, end: 200.0); // yMid = 100
       final curve = SigmoidCurve(xRange, yRange, segments); // Constructor segments is not used by generate
 
-      final points = curve.pathOffsetsInMeters;
+      final points = curve.pathOfPoints;
       // The internal segments is 100. Midpoint index is 50.
       final midPoint = points[(segments / 2).toInt()];
 
@@ -79,15 +77,11 @@ void main() {
 
     test('generate should scale y values correctly based on yRange', () {
       final int segments = 10;
-      final xRange = Range(begin: 0.0, end: 0.0); // xNorm will always be 0
       final yRange1 = Range(begin: 0.0, end: 100.0);
       final yMid1 = average(yRange1);
 
       final yRange2 = Range(begin: 0.0, end: 200.0);
       final yMid2 = average(yRange2);
-
-      final curve1 = SigmoidCurve(xRange, yRange1, segments);
-      final curve2 = SigmoidCurve(xRange, yRange2, segments);
 
       // xNorm will be 0 for all points because xRange.begin == xRange.end
       // y_sigmoid = 1.0 / (1.0 + math.exp(-0.0 * 20)) = 0.5
@@ -108,15 +102,15 @@ void main() {
       final expectedY1 = (ySigmoid - 0.5) * yMid1;
       final expectedY2 = (ySigmoid - 0.5) * yMid2;
 
-      expect(curveScaling1.pathOffsetsInMeters.first.dy, closeTo(expectedY1, 0.0001));
-      expect(curveScaling2.pathOffsetsInMeters.first.dy, closeTo(expectedY2, 0.0001));
+      expect(curveScaling1.pathOfPoints.first.dy, closeTo(expectedY1, 0.0001));
+      expect(curveScaling2.pathOfPoints.first.dy, closeTo(expectedY2, 0.0001));
       // And because yMid scaling is linear:
       if (expectedY1 != 0) { // Avoid division by zero if ySigmoid happens to be 0.5
-        expect(curveScaling2.pathOffsetsInMeters.first.dy / curveScaling1.pathOffsetsInMeters.first.dy,
+        expect(curveScaling2.pathOfPoints.first.dy / curveScaling1.pathOfPoints.first.dy,
             closeTo(2.0, 0.0001));
       } else {
-        expect(curveScaling1.pathOffsetsInMeters.first.dy, closeTo(0.0, 0.0001));
-        expect(curveScaling2.pathOffsetsInMeters.first.dy, closeTo(0.0, 0.0001));
+        expect(curveScaling1.pathOfPoints.first.dy, closeTo(0.0, 0.0001));
+        expect(curveScaling2.pathOfPoints.first.dy, closeTo(0.0, 0.0001));
       }
     });
 
@@ -126,7 +120,7 @@ void main() {
       final yRange = Range(begin: 0.0, end: 100.0); // yMid = 50
       final curve = SigmoidCurve(xRange, yRange, segments);
 
-      final points = curve.pathOffsetsInMeters;
+      final points = curve.pathOfPoints;
       expect(points.length, segments + 1);
 
       // For all points:
@@ -151,7 +145,7 @@ void main() {
       final yRange = Range(begin: 50.0, end: 50.0); // yMid will be 50.0
       final curve = SigmoidCurve(xRange, yRange, segments);
 
-      final points = curve.pathOffsetsInMeters;
+      final points = curve.pathOfPoints;
       final scaleNorm = 20.0;
       // xNorm for first point = -1.0
       final ySigmoidFirst = sigmoid(xRange.begin, scaleNorm);
