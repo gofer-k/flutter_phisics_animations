@@ -6,3 +6,5 @@ typedef SpeedFlow = LimitRange<double>;  // [m /2]
 typedef Pressure = LimitRange<double>;  // [kPa]
 typedef Length = LimitRange<double>;    // [m]
 typedef Time = LimitRange<double>;      // [s]
+
+final double accelerationToEarth = 9.81; // [m/s^2]

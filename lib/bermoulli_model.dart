@@ -1,36 +1,44 @@
 
-import 'limit_range.dart';
-import "density.dart"'
+import 'package:first_flutter_app/area_path.dart';
+import 'package:first_flutter_app/pipe_path.dart';
+import 'package:flutter/foundation.dart';
+
+import 'BermoulliModelTypes.dart';
+import 'density.dart';
 
 class BermoulliModel {
-  typedef Area = LimitRange<double>;  // [m]
-  typedef LevelFromGround = LimitRange<double>; // [m]
-  typedef SpeedFlow = LimitRange<double>;  // [m /2]
-  typedef Pressure = LimitRange<double>;  // [kPa]
-  typedef Length = LimitRange<double>;    // [m]
-  typedef Time = LimitRange<double>;      // [s]
-
-  static final Length _length = 10.0; // [m]
+  static final Length _length = Length(begin: 0.0, end: 10.0); // [m]
   get length => _length;
 
-  Area _areaConstrains = Area(start: 0.3, end: 0.7);
-  LevelFromGround _levelConstrains = LevelFromGround(start: 0.0, end: 0.5);
-  SpeedFlow _speedConstrains = SpeedFlow(start: 0.0, end: 20.0);
-  Pressure _pressureConstrains = Pressure(start: 990.0, end: 1500.0);
-  final double _accelerationEarth = 9.81; // [m/s^2]
-  final Density _density = Density.water; // [kg/m^3];
+  Area area = Area(begin: 0.3, end: 0.7);
+  LevelFromGround beginLevel = LevelFromGround(begin: 0.0, end: 0.5);
+  SpeedFlow beginSpeed = SpeedFlow(begin: 0.0, end: 20.0);
+  Pressure beginPressure = Pressure(begin: 990.0, end: 1500.0);
+  Density density = Density.water; // [kg/m^3];
   final PipePath path;
+  late AreaPath areaPath;
 
   BermoulliModel({
-    this._areaConstrains,
-    this._levelConstrains,
-    this._speedConstrains,
-    this._pressureConstrains,
-    this._density,
-    required this.path});
+    required this.area,
+    required this.beginLevel,
+    required this.beginSpeed,
+    required this.beginPressure,
+    required this.density,
+    required this.path}) {
 
-  double currentSpeed(double time) {
-    double startLength = 0.0;
-
+    areaPath = AreaPath(pipe: path, areaConstrains: area);
   }
+
+  double currentSpeedFlow(int indexPath) {
+    if  (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
+      // Current speed a stationary flow of liquid or gas in a pipe
+      // V1 / V2 = S1 / S2;
+      return beginSpeed.value * areaPath.areaInPath.first / areaPath.areaInPath.last;
+    }
+    if (kDebugMode) {
+      print("Incorrect indexPath: $indexPath");
+    }
+    return 0.0;
+  }
+
 }
