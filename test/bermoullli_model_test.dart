@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final modelInitial = BermoulliModel(
       area: Area(begin: 0.3, end: 0.7),
-      beginLevel: LevelFromGround(begin: 0.0, end: 0.5),
+      levelGround: LevelFromGround(begin: 0.0, end: 0.5),
       beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
       beginPressure: Pressure(begin: 990.0, end: 1500.0),
       density: Density.water, // [kg/m^3];
@@ -18,7 +18,7 @@ void main() {
   group('BermoulliModel Tests', () {
     test("should correct initialize model", () {
       expect(modelInitial.area.value, 0.3);
-      expect(modelInitial.beginLevel.value, 0.0);
+      expect(modelInitial.levelGround.value, 0.0);
       expect(modelInitial.beginSpeed.value, 0.0);
       expect(modelInitial.beginPressure.value, 990.0);
       expect(modelInitial.density, Density.water);

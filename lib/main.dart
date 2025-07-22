@@ -1,7 +1,12 @@
+import 'package:first_flutter_app/BermoulliModelTypes.dart';
+import 'package:first_flutter_app/bermoulli_model.dart';
 import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
+import 'package:first_flutter_app/pipe_path.dart';
+import 'package:first_flutter_app/sigmoid_pipe_path.dart';
 import 'package:flutter/material.dart';
 
 import 'bernoulli_painter.dart';
+import 'density.dart';
 import 'display_expression.dart';
 import 'factor_input_row.dart';
 import 'factor_slider.dart';
@@ -78,18 +83,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
-  double _areaAtBeginning = 30.0;
-  double _areaAtEnd = 20.0;
-  double _currentStartHigh = 0.0;
-  double _currentEndHigh = 0.10;
-  double _startSpeedFlow = 4.0;
-  double _currentStartPressure = 1000.0;
+  BermoulliModel _model = BermoulliModel(
+      area: Area(begin: 40.0, end:20.0),
+      levelGround: LevelFromGround(begin: 0.0, end: 1.0),
+      beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
+      beginPressure: Pressure(begin: 990.0, end: 1500.0),
+      density: Density.water,
+      path: SigmoidCurve(
+          Range(begin: -1.0, end: 1.0),
+          Range(begin: 0.0, end: 1.0),
+          100));
+  
   final int _initAnimationDurationMilliSecs = 3000;
   final double _initStartSpeedFlow = 4.0;
 
   @override
   void initState() {
     super.initState();
+
+    _model.beginPressure.value = 1000.0;
+    _model.beginSpeed.value = 4.0;
 
     _expandController = AnimationController(
       vsync: this, // from SingleTickerProviderStateMixin
@@ -107,17 +120,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     // Initialize controllers with default values
     _startAreaController =
-        TextEditingController(text: _areaAtBeginning.toString());
+        TextEditingController(text: _model.area.begin.toString());
     _endAreaController =
-        TextEditingController(text: _areaAtEnd.toString());
+        TextEditingController(text: _model.area.end.toString());
     _startHighController =
-        TextEditingController(text: _currentStartHigh.toString());
+        TextEditingController(text: _model.levelGround.begin.toString());
     _endHighController =
-        TextEditingController(text: _currentEndHigh.toString());
+        TextEditingController(text: _model.levelGround.end.toString());
     _startSpeedFlowController =
-        TextEditingController(text: _startSpeedFlow.toString());
+        TextEditingController(text: _model.beginSpeed.begin.toString());
     _pressureAtStartController =
-        TextEditingController(text: _currentStartPressure.toString());
+        TextEditingController(text: _model.beginPressure.begin.toString());
 
     final int durationMilliSecs = _updateAnimationDdration();
 
@@ -162,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       CurvedAnimation(
         parent: _curveAnimationController,
         curve: Curves
-            .easeIn, // Let the BezierPainter handle the "curviness" of the draw
+            .easeInOut, // Let the BezierPainter handle the "curviness" of the draw
       ),
     )
       ..addListener(() {
@@ -175,26 +188,38 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void durationMilliSecs() {
     // Try to parse values and update state, then call setState to redraw CustomPaint
     setState(() {
-      _areaAtBeginning =
-          double.tryParse(_startAreaController.text) ?? _areaAtBeginning;
-      _areaAtEnd =
-          double.tryParse(_endAreaController.text) ?? _areaAtEnd;
-      _currentStartHigh =
-          double.tryParse(_startHighController.text) ?? _currentStartHigh;
-      _currentEndHigh =
-          double.tryParse(_endHighController.text) ?? _currentEndHigh;
-      _startSpeedFlow =
-          double.tryParse(_startSpeedFlowController.text) ??
-              _startSpeedFlow;
-      _currentStartPressure = double.tryParse(_pressureAtStartController.text) ??
-          _currentStartPressure;
+      final startArea =
+          double.tryParse(_startAreaController.text) ?? _model.area.begin;
+      final endArea =
+          double.tryParse(_endAreaController.text) ?? _model.area.end;
+      final startHigh =
+          double.tryParse(_startHighController.text) ?? _model.levelGround.begin;
+      final endHigh =
+          double.tryParse(_endHighController.text) ?? _model.levelGround.end;
+      final startSpeedFlow =
+          double.tryParse(_startSpeedFlowController.text) ??  _model.beginSpeed.value;
+      final startPressure = double.tryParse(_pressureAtStartController.text) ??
+          _model.beginPressure.value;
 
-      _rebuildCurveAnimation();
+      if (startArea != _model.area.begin ||
+          endArea != _model.area.end ||
+          startHigh != _model.levelGround.begin ||
+          endHigh != _model.levelGround.end ||
+          startSpeedFlow != _model.beginSpeed.value ||
+          startPressure != _model.beginPressure.value) {
+        _model.regenerateAll(
+            Area(begin: startArea, end: endArea),
+            LevelFromGround(begin: startHigh, end: endHigh),
+            SpeedFlow(begin: startSpeedFlow, end: _model.beginSpeed.end),
+            Pressure(begin: startPressure, end: _model.beginPressure.end));
+        _rebuildCurveAnimation();
+      }
+      // _rebuildCurveAnimation();
     });
   }
 
   int _updateAnimationDdration() {
-    return (_initStartSpeedFlow / _startSpeedFlow *
+    return (_initStartSpeedFlow / _model.beginSpeed.value *
         _initAnimationDurationMilliSecs).round();
   }
 
@@ -202,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (!mounted) return;
 
     setState(() {
-      _startSpeedFlow = value;
+      _model.beginSpeed.value = value;
       final int duration = _updateAnimationDdration();
       _curveAnimationController.duration = Duration(milliseconds: duration);
     });
@@ -213,8 +238,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (!mounted) return;
 
     setState(() {
-      _areaAtBeginning = value;
-      _startAreaController.text = _areaAtBeginning.toString();
+      _model.changeArea(Area(begin: value, end: _model.area.end));
+      _startAreaController.text = value.toString();
     });
     _toggleCurveAnimation(); // Restart animation with new duration
   }
@@ -223,8 +248,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (!mounted) return;
 
     setState(() {
-      _areaAtEnd = value;
-      _endAreaController.text = _areaAtEnd.toString();
+      _model.changeArea(Area(begin: _model.area.begin, end: value));
+      _endAreaController.text = value.toString();
     });
     _toggleCurveAnimation(); // Restart animation with new duration
   }
@@ -235,13 +260,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (newPressure != null &&
         newPressure >= 0) { // Assuming area can't be negative
       setState(() {
-        _currentStartPressure = newPressure;
-        _pressureAtStartController.text =
-            _currentStartPressure.toString(); // Update controller text
+        _model.beginPressure.value = newPressure;
+        _pressureAtStartController.text = newPressure.toString();
       });
       _toggleCurveAnimation();
     } else {
-      _pressureAtStartController.text = _currentStartPressure.toString();
+      _pressureAtStartController.text = _model.beginPressure.value.toString();
     }
   }
 
@@ -251,13 +275,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (newHighLevel != null &&
         newHighLevel >= 0) { // Assuming area can't be negative
       setState(() {
-        _currentStartHigh = newHighLevel;
+        _model.changeLevelGround(
+            LevelFromGround(begin: newHighLevel, end: _model.levelGround.end));
         _startHighController.text =
-            _currentStartHigh.toString(); // Update controller text
+            _model.levelGround.end.toString(); // Update controller text
       });
       _toggleCurveAnimation();
     } else {
-      _startHighController.text = _currentStartHigh.toString();
+      _startHighController.text = _model.levelGround.begin.toString();
     }
   }
 
@@ -267,13 +292,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (newHighLevel != null &&
         newHighLevel >= 0) { // Assuming area can't be negative
       setState(() {
-        _currentEndHigh = newHighLevel;
-        _endHighController.text =
-            _currentEndHigh.toString(); // Update controller text
+        _model.changeLevelGround(
+            LevelFromGround(begin: _model.levelGround.begin,
+                end: newHighLevel));
+
+        _endHighController.text = newHighLevel.toString();
       });
       _toggleCurveAnimation();
     } else {
-      _endHighController.text = _currentEndHigh.toString();
+      _endHighController.text = _model.levelGround.end.toString();
     }
   }
 
@@ -316,7 +343,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     // Define breakpoints for different screen sizes
     double breakpointSmall = 600.0;
-    double breakpointMedium = 900.0;
 
     // Choose the appropriate layout based on screen width
     Widget content;
@@ -402,17 +428,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           child: CustomPaint(
             size: animationSize,
             painter: BernoulliPainter(
-              curve: BernoulliFormulaAnimCurve.ease, // Your custom Cubic curve
-              animationProgress: _curveAnimation.value, // From your AnimationController
+              curve: BernoulliFormulaAnimCurve.ease,
+              animationProgress: _curveAnimation.value,
               originalCurveColor: Colors.deepPurple,
               offsetCurveColor: Colors.orangeAccent,
               strokeWidth: 1.5,
-              startPipeArea: _areaAtBeginning, // How far apart the parallel lines are
-              endPipeArea: _areaAtEnd,
-              startLevel: 20.0, // Where the parallel lines start,
-              endLevel: 1.0,
-              segments: 100, // Increase for smoother parallels
+              // startPipeArea: _areaAtBeginning,
+              // endPipeArea: _areaAtEnd,
+              // startLevel: 20.0, // Where the parallel lines start,
+              // endLevel: 1.0,
+              // segments: 100, // Increase for smoother parallels
               dashPattern: const [20, 20], // Draw 15px, skip 8px
+              model: _model,
             ),
           ),
         ),
@@ -474,13 +501,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   children: <Widget>[
                     FactorSlider(
                       label: r'a_1',
-                      initialValue: _areaAtBeginning,
+                      // initialValue: _areaAtBeginning,
+                      initialValue: _model.area.begin,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleStartArea,),
                     FactorSlider(
                       label: r'a_2',
-                      initialValue: _areaAtEnd,
+                      // initialValue: _areaAtEnd,
+                      initialValue: _model.area.end,
                       minValue: 10.0,
                       maxValue: 50.0,
                       onChanged: _handleEndArea,),
@@ -489,7 +518,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ),
               FactorSlider(
                 label: r'\text{Prędkość } V_1 \frac{m}{s}',
-                initialValue: _startSpeedFlow,
+                initialValue: _model.beginSpeed.value,
                 minValue: 0.0,
                 maxValue: 20.0,
                 onChanged: _handleStartSpeed,),

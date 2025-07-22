@@ -11,7 +11,7 @@ class BermoulliModel {
   get length => _length;
 
   Area area = Area(begin: 0.3, end: 0.7);
-  LevelFromGround beginLevel = LevelFromGround(begin: 0.0, end: 0.5);
+  LevelFromGround levelGround = LevelFromGround(begin: 0.0, end: 0.5);
   SpeedFlow beginSpeed = SpeedFlow(begin: 0.0, end: 20.0);
   Pressure beginPressure = Pressure(begin: 990.0, end: 1500.0);
   Density density = Density.water; // [kg/m^3];
@@ -20,20 +20,20 @@ class BermoulliModel {
 
   BermoulliModel({
     required this.area,
-    required this.beginLevel,
+    required this.levelGround,
     required this.beginSpeed,
     required this.beginPressure,
     required this.density,
     required this.path}) {
-
-    areaPath = AreaPath(pipe: path, areaConstrains: area);
+    _generate();
   }
 
   double currentSpeedFlow(int indexPath) {
-    if  (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
+    if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
       // Current speed a stationary flow of liquid or gas in a pipe
       // V1 / V2 = S1 / S2;
-      return beginSpeed.value * areaPath.areaInPath.first / areaPath.areaInPath.last;
+      return beginSpeed.value * areaPath.areaInPath.first /
+          areaPath.areaInPath.last;
     }
     if (kDebugMode) {
       print("Incorrect indexPath: $indexPath");
@@ -41,4 +41,28 @@ class BermoulliModel {
     return 0.0;
   }
 
+  void changeArea(Area newArea) {
+    area = newArea;
+    _generate();
+  }
+
+  void changeLevelGround(LevelFromGround levelFromGround) {
+    levelFromGround = levelFromGround;
+    _generate();
+  }
+
+  void _generate() {
+    areaPath = AreaPath(pipe: path, areaConstrains: area);
+  }
+
+  void regenerateAll(Area newArea,
+      LevelFromGround newLevelGround,
+      SpeedFlow newBeginSpeed,
+      Pressure newBeginPressure) {
+    area = newArea;
+    levelGround = newLevelGround;
+    beginSpeed = newBeginSpeed;
+    beginPressure = newBeginPressure;
+    _generate();
+  }
 }

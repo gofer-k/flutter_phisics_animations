@@ -4,18 +4,35 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'bermoulli_model.dart';
+
 class BernoulliPainter extends CustomPainter {
   final Cubic curve;
   final double animationProgress;
   final Color originalCurveColor;
   final Color offsetCurveColor;
   final double strokeWidth;
-  final double startPipeArea; // How far to offset the parallel curves
-  final double endPipeArea; // How far to offset the parallel curves
-  final double startLevel;
-  final double endLevel;
-  final int segments; // Number of segments to approximate the parallel curve
+  // final double startPipeArea; // How far to offset the parallel curves
+  // final double endPipeArea; // How far to offset the parallel curves
+  // final double startLevel;
+  // final double endLevel;
+  // final int segments; // Number of segments to approximate the parallel curve
   final List<double> dashPattern;
+  final BermoulliModel model;
+  
+  // BernoulliPainter({
+  //   required this.curve,
+  //   required this.animationProgress,
+  //   this.originalCurveColor = Colors.blue,
+  //   this.offsetCurveColor = Colors.green,
+  //   this.strokeWidth = 2.0,
+  //   required this.startPipeArea,
+  //   required this.endPipeArea,
+  //   required this.startLevel,
+  //   required this.endLevel,
+  //   this.segments = 50, // More segments = smoother, but more computation
+  //   required this.dashPattern,
+  // });
 
   BernoulliPainter({
     required this.curve,
@@ -23,14 +40,10 @@ class BernoulliPainter extends CustomPainter {
     this.originalCurveColor = Colors.blue,
     this.offsetCurveColor = Colors.green,
     this.strokeWidth = 2.0,
-    required this.startPipeArea,
-    required this.endPipeArea,
-    required this.startLevel,
-    required this.endLevel,
-    this.segments = 50, // More segments = smoother, but more computation
     required this.dashPattern,
+    required this.model,
   });
-
+  
   @override
   void paint(Canvas canvas, Size size) {
     final Paint offsetPaint = Paint()
@@ -55,7 +68,7 @@ class BernoulliPainter extends CustomPainter {
 
     final double desiredCurveWidthInViewport = size.width * 0.8;
     final double xScale = desiredCurveWidthInViewport / xRange;
-    final yScale = centerPoint.dy - size.height - startLevel;
+    final yScale = centerPoint.dy - size.height - model.levelGround.begin;
 
     final List<Offset> points = List.generate(segments + 1, (i) {
       final double xNorm = (i / segments) * xRange + xMin;
@@ -271,8 +284,8 @@ class BernoulliPainter extends CustomPainter {
       final double totalLength = pathMetric.length;
       if (totalLength <= 0) continue;
 
-      for (int i = 0; i <= segments; i++) {
-        double t = i / segments; // Parameter along the current length
+      for (int i = 0; i <= model.path.segments; i++) {
+        double t = i / model.path.segments; // Parameter along the current length
         double currentDistanceOnPath = t * totalLength;
 
         final ui.Tangent? tangent = pathMetric.getTangentForOffset(
@@ -283,7 +296,7 @@ class BernoulliPainter extends CustomPainter {
             Offset(-tangent.vector.dy, tangent.vector.dx) :
             Offset(tangent.vector.dy, -tangent.vector.dx)).normalized(); // Normal vector
 
-          double offsetDistance = startPipeArea + t * (endPipeArea - startPipeArea);
+          double offsetDistance = model.area.begin + t * (model.area.end - model.area.begin);
           pathPoints.add(point + normal * offsetDistance);
         }
       }
@@ -309,10 +322,8 @@ class BernoulliPainter extends CustomPainter {
         oldDelegate.originalCurveColor != originalCurveColor ||
         oldDelegate.offsetCurveColor != offsetCurveColor ||
         oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.startPipeArea != startPipeArea ||
-        oldDelegate.endPipeArea != endPipeArea ||
-        oldDelegate.segments != segments ||
-        oldDelegate.dashPattern != dashPattern;
+        oldDelegate.dashPattern != dashPattern ||
+        oldDelegate.model != model;
   }
 }
 
