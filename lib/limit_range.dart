@@ -16,11 +16,7 @@ class LimitRange<T extends num> {
     }
   }
 
-  LimitRange({required this.begin, required this.end}) : _value = begin {
-    if (begin > end) {
-      throw ArgumentError('Begin must be less than end');
-    }
-  }
+  LimitRange({required this.begin, required this.end}) : _value = begin;
 
   @override
   bool operator ==(Object other) {

@@ -32,5 +32,27 @@ void main() {
       final calculatedMidArea = areaPath.areaInPath[midIndex];
       expect(expectedMidArea, equals(calculatedMidArea));
     });
+
+    test('generate should correctly calculate all points', () {
+      checkValues(AreaPath areaPath, bool isIncreasing) {
+        var prevArea = areaPath.areaInPath.first;
+        for (int i = 1; i < areaPath.areaInPath.length; i++) {
+          var currentArea = areaPath.areaInPath[i];
+          if (isIncreasing) {
+            expect(currentArea, greaterThanOrEqualTo(prevArea));
+          } else {
+            expect(currentArea, lessThanOrEqualTo(prevArea));
+          }
+          prevArea = currentArea;
+        }
+      }
+
+      final isIncreasing = true;
+      final Area increasingAreas = Area(begin: 10.0, end: 20.0);
+      checkValues(AreaPath(increasingAreas, path), isIncreasing);
+
+      final Area decreasingAreas = Area(begin: 20.0, end: 10.0);
+      checkValues(AreaPath(decreasingAreas, path), !isIncreasing);
+    });
   });
 }
