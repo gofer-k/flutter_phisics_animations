@@ -12,13 +12,13 @@ void main() {
 
   group('AreaPath Tests', () {
     test('generate should produce correct number of points', () {
-      final areaPath = AreaPath(Area(begin: 1.0, end: 1.0), path);
+      final areaPath = AreaPath(areaConstrains: Area(begin: 1.0, end: 1.0), pipe: path);
       expect(areaPath.areaInPath.length, equals(path.pathOfPoints.length));
     });
 
     test('generate should correctly calculate first and last points', () {
       final Area constrainedArea = Area(begin: 2.0, end: 10.0);
-      final areaPath = AreaPath(constrainedArea, path);
+      final areaPath = AreaPath(areaConstrains: constrainedArea, pipe: path);
       expect(constrainedArea.begin, equals(areaPath.areaInPath.first));
       expect(constrainedArea.end, equals(areaPath.areaInPath.last));
     });
@@ -26,7 +26,7 @@ void main() {
     test('generate should correctly calculate mid point area', () {
       final Area constrainedArea = Area(begin: 10.0, end: 20.0);
       final expectedMidArea = (constrainedArea.begin + constrainedArea.end) / 2.0;
-      final areaPath = AreaPath(constrainedArea, path);
+      final areaPath = AreaPath(areaConstrains: constrainedArea, pipe: path);
 
       final midIndex = areaPath.areaInPath.length ~/ 2;
       final calculatedMidArea = areaPath.areaInPath[midIndex];
@@ -49,10 +49,10 @@ void main() {
 
       final isIncreasing = true;
       final Area increasingAreas = Area(begin: 10.0, end: 20.0);
-      checkValues(AreaPath(increasingAreas, path), isIncreasing);
+      checkValues(AreaPath(areaConstrains: increasingAreas, pipe: path), isIncreasing);
 
       final Area decreasingAreas = Area(begin: 20.0, end: 10.0);
-      checkValues(AreaPath(decreasingAreas, path), !isIncreasing);
+      checkValues(AreaPath(areaConstrains: decreasingAreas, pipe: path), !isIncreasing);
     });
   });
 }

@@ -6,7 +6,7 @@ class AreaPath {
   PathInMeters _areaInPath = PathInMeters.empty();
   PathInMeters get areaInPath => _areaInPath;
 
-  AreaPath(Area areaConstrains, PipePath pipe) {
+  AreaPath({required Area areaConstrains, required PipePath pipe}) {
     if (pipe.pathOfPoints.isEmpty) {
       throw ArgumentError("PipePath is empty");
     }
@@ -16,6 +16,5 @@ class AreaPath {
       double t = i / pipe.segments; // Parameter along the current length
       return areaConstrains.begin + t * (areaConstrains.end - areaConstrains.begin);
     });
-
   }
 }
