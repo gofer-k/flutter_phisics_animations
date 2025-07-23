@@ -84,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
-  BermoulliModel _model = BermoulliModel(
+  final BermoulliModel _model = BermoulliModel(
       area: Area(begin: 40.0, end:20.0),
       levelGround: LevelFromGround(begin: 0.0, end: 1.0),
       beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
@@ -94,7 +94,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           Range(begin: -1.0, end: 1.0),
           Range(begin: 0.0, end: 1.0),
           100));
-  
+  late double _currentSpeedFlow ;
+  late double _currentPressure;
+  late double _currentLevel;
+
   final int _initAnimationDurationMilliSecs = 3000;
   final double _initStartSpeedFlow = 4.0;
 
@@ -104,6 +107,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _model.beginPressure.value = 1000.0;
     _model.beginSpeed.value = 4.0;
+    _currentSpeedFlow = _model.beginSpeed.value;
+    _currentPressure = _model.beginPressure.value;
+    _currentLevel = _model.levelGround.begin;
 
     _expandController = AnimationController(
       vsync: this, // from SingleTickerProviderStateMixin
@@ -142,8 +148,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           milliseconds: durationMilliSecs), // Duration for the curve drawing animation
     );
     _rebuildCurveAnimation();
-    // Optionally start the animation immediately
-    // _curveAnimationController.forward();
   }
 
   @override
@@ -179,12 +183,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             .easeInOut, // Let the BezierPainter handle the "curviness" of the draw
       ),
     )
-      ..addListener(() {
-        setState(() {
-          // This will trigger a repaint of CustomPaint
-          final int indexPath = (_curveAnimation.value * _initAnimationDurationMilliSecs).toInt();          
-        });
+    ..addListener(() {
+      setState(() {
+        // This will trigger a repaint of CustomPaint
+        final int indexPath = _model.indexPath(_curveAnimation.value);
+        _currentSpeedFlow = _model.currentSpeedFlow(indexPath);
+        _currentPressure = _model.currentPressure(indexPath);
+        _currentLevel = _model.currentLevelGround(indexPath);
       });
+    })
+    ..addStatusListener((status){
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        _currentSpeedFlow = _model.endSpeedFlow();
+        _currentPressure = _model.endPressure();
+        _currentLevel = _model.levelGround.end;
+      }
+    });
   }
 
   void durationMilliSecs() {
@@ -320,19 +335,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       }
     });
   }
-  
-  double _currentPressure(int index) {
-    return _model.currentPressure(index);
-  }
 
-  double _currentLevel(int index) {
-    return _model.currentLevel(index);
-  }
-
-  double _currentSpeedFlow() {
-    
-  }
-  
   @override
   Widget build(BuildContext context) {
     // Get the screen width
@@ -404,17 +407,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget buildDesktopLayout() {
     return Text("Desktop content display here");
   }
-  
+
   Widget displayParameterResult(String label, String unit, double value) {
     return Row(mainAxisAlignment: MainAxisAlignment.center,
       children: [
         DisplayExpression(context: context, expression: label, scale: 1.2),
-        Text("$value\t"),
+        DynamicLabel(labelText: value.toStringAsFixed(2)),
         DisplayExpression(context: context, expression: unit, scale: 1.2)
       ],
     );
   }
-  
+
   Widget animationPlaybackPanel(Size animationSize) {
     return Column(
       children: [
@@ -454,13 +457,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget animationResultParameters() {
     return Column(
       children: [
-        // DynamicLabel(labelText: "pressure = ",
-        //     onUpdateLabel: (updateLabel) {
-        //       _updateCurrentSpeedFlowCallback = updateLabel;
-        // }),
-        displayParameterResult(r'\text{p = }', r'kPa',  _currentPressure()),
-        displayParameterResult(r'\text{h = }', r'm', _currentLevel()),
-        displayParameterResult(r'\text{V = }', r'\frac{m}{s}', _currentSpeedFlow()),
+        displayParameterResult(r'\text{p = }', r' kPa',  _currentPressure),
+        displayParameterResult(r'\text{h = }', r' m', _currentLevel),
+        displayParameterResult(r'\text{V = }', r' \frac{m}{s}', _currentSpeedFlow),
       ],
     );
   }

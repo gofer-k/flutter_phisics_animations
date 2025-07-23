@@ -28,12 +28,16 @@ class BermoulliModel {
     _generate();
   }
 
+  int indexPath(double relativePosition) {
+    return (relativePosition * areaPath.areaInPath.length).toInt();
+  }
+
   double currentSpeedFlow(int indexPath) {
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
       // Current speed a stationary flow of liquid or gas in a pipe
       // V1 / V2 = S1 / S2;
       return beginSpeed.value * areaPath.areaInPath.first /
-          areaPath.areaInPath.last;
+          areaPath.areaInPath[indexPath];
     }
     if (kDebugMode) {
       print("currentSpeedFlow: Incorrect indexPath: $indexPath");
@@ -41,7 +45,12 @@ class BermoulliModel {
     return 0.0;
   }
 
+  double endSpeedFlow() {
+    return currentSpeedFlow(areaPath.areaInPath.length - 1);
+  }
+
   double currentLevelGround(int indexPath) {
+    // TODO: Fxx calculation is not correct:
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
       return levelGround.begin +
           (levelGround.end - levelGround.begin) *
@@ -54,6 +63,7 @@ class BermoulliModel {
   }
 
   double currentPressure(int indexPath) {
+    // TODO: Fxx calculation is not correct:
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
       // p1 + rho * g * h1 + rho * v1 / 2 = p2 + rho * g * h2 + rho * v2 / 2
       final v1 = beginSpeed.value;
@@ -69,6 +79,10 @@ class BermoulliModel {
       print("currentPressure: Incorrect indexPath: $indexPath");
     }
     return 0.0;
+  }
+
+  double endPressure() {
+    return currentPressure(areaPath.areaInPath.length - 1);
   }
 
   void changeArea(Area newArea) {
