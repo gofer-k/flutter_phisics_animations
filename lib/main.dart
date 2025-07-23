@@ -1,6 +1,7 @@
 import 'package:first_flutter_app/BermoulliModelTypes.dart';
 import 'package:first_flutter_app/bermoulli_model.dart';
 import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
+import 'package:first_flutter_app/dynamic_label.dart';
 import 'package:first_flutter_app/pipe_path.dart';
 import 'package:first_flutter_app/sigmoid_pipe_path.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late TextEditingController _endHighController;
   late TextEditingController _startSpeedFlowController;
   late TextEditingController _pressureAtStartController;
-
+  
   // Add more controllers as needed for other factors (density, pressure, etc.)
 
   // Variables to hold the parsed values (optional, but good for direct use)
@@ -181,6 +182,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ..addListener(() {
         setState(() {
           // This will trigger a repaint of CustomPaint
+          final int indexPath = (_curveAnimation.value * _initAnimationDurationMilliSecs).toInt();          
         });
       });
   }
@@ -319,19 +321,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
   
-  double _currentPressure() {
-    // todo: calculate current pressure of pipe
-    return 0.0;
+  double _currentPressure(int index) {
+    return _model.currentPressure(index);
   }
 
-  double _currentLevel() {
-    // todo: calculate current level of pipe
-    return 0.0;
+  double _currentLevel(int index) {
+    return _model.currentLevel(index);
   }
 
   double _currentSpeedFlow() {
-    // todo: calculate current speed of flow
-    return 0.0;
+    
   }
   
   @override
@@ -410,7 +409,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return Row(mainAxisAlignment: MainAxisAlignment.center,
       children: [
         DisplayExpression(context: context, expression: label, scale: 1.2),
-        Text(value.toString() + "\t"),
+        Text("$value\t"),
         DisplayExpression(context: context, expression: unit, scale: 1.2)
       ],
     );
@@ -433,11 +432,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               originalCurveColor: Colors.deepPurple,
               offsetCurveColor: Colors.orangeAccent,
               strokeWidth: 1.5,
-              // startPipeArea: _areaAtBeginning,
-              // endPipeArea: _areaAtEnd,
-              // startLevel: 20.0, // Where the parallel lines start,
-              // endLevel: 1.0,
-              // segments: 100, // Increase for smoother parallels
               dashPattern: const [20, 20], // Draw 15px, skip 8px
               model: _model,
             ),
@@ -460,6 +454,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget animationResultParameters() {
     return Column(
       children: [
+        // DynamicLabel(labelText: "pressure = ",
+        //     onUpdateLabel: (updateLabel) {
+        //       _updateCurrentSpeedFlowCallback = updateLabel;
+        // }),
         displayParameterResult(r'\text{p = }', r'kPa',  _currentPressure()),
         displayParameterResult(r'\text{h = }', r'm', _currentLevel()),
         displayParameterResult(r'\text{V = }', r'\frac{m}{s}', _currentSpeedFlow()),
@@ -558,5 +556,4 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ],
     );
   }
-
 }

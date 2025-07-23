@@ -36,7 +36,37 @@ class BermoulliModel {
           areaPath.areaInPath.last;
     }
     if (kDebugMode) {
-      print("Incorrect indexPath: $indexPath");
+      print("currentSpeedFlow: Incorrect indexPath: $indexPath");
+    }
+    return 0.0;
+  }
+
+  double currentLevelGround(int indexPath) {
+    if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
+      return levelGround.begin +
+          (levelGround.end - levelGround.begin) *
+              path.pathOfPoints[indexPath].dy;
+    }
+    if (kDebugMode) {
+      print("currentLevelGround: Incorrect indexPath: $indexPath");
+    }
+    return 0.0;
+  }
+
+  double currentPressure(int indexPath) {
+    if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
+      // p1 + rho * g * h1 + rho * v1 / 2 = p2 + rho * g * h2 + rho * v2 / 2
+      final v1 = beginSpeed.value;
+      final v2 = currentSpeedFlow(indexPath);
+      final h1 = levelGround.begin;
+      final h2 = currentLevelGround(indexPath);
+      final p1 = beginPressure.value;
+      final rho = density.value;
+      final g = 9.81;
+      return p1 + rho * g * h1 + rho * v1 / 2 - rho * g * h2 - rho * v2 / 2;
+    }
+    if (kDebugMode) {
+      print("currentPressure: Incorrect indexPath: $indexPath");
     }
     return 0.0;
   }
