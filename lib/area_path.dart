@@ -1,6 +1,6 @@
 import 'package:first_flutter_app/pipe_path.dart';
 
-import 'BermoulliModelTypes.dart';
+import 'bermoulli_model_types.dart';
 
 class AreaPath {
   PathInMeters _areaInPath = PathInMeters.empty();

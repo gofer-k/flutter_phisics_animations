@@ -1,4 +1,4 @@
-import 'package:first_flutter_app/BermoulliModelTypes.dart';
+import 'package:first_flutter_app/bermoulli_model_types.dart';
 import 'package:first_flutter_app/area_path.dart';
 import 'package:first_flutter_app/pipe_path.dart';
 import 'package:first_flutter_app/sigmoid_pipe_path.dart';
@@ -8,7 +8,7 @@ void main() {
   final int segments = 10;
   final xRange = Range(begin: 0.0, end: 10.0); // [m]
   final yRange = Range(begin: 0.0, end: 10.0);
-  final path = SigmoidCurve(xRange, yRange, segments);
+  final path = SigmoidCurve(xRange: xRange, yRange: yRange, segments: segments);
 
   group('AreaPath Tests', () {
     test('generate should produce correct number of points', () {

@@ -1,4 +1,4 @@
-import 'package:first_flutter_app/BermoulliModelTypes.dart';
+import 'package:first_flutter_app/bermoulli_model_types.dart';
 import 'package:first_flutter_app/bermoulli_model.dart';
 import 'package:first_flutter_app/density.dart';
 import 'package:first_flutter_app/pipe_path.dart';
@@ -12,7 +12,7 @@ void main() {
       beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
       beginPressure: Pressure(begin: 990.0, end: 1500.0),
       density: Density.water, // [kg/m^3];
-      path: SigmoidCurve(Range(begin: 0.0, end: 10.0), Range(begin: 0.0, end: 10.0), 10)
+      path: SigmoidCurve(xRange: Range(begin: 0.0, end: 10.0), yRange: Range(begin: 0.0, end: 10.0), segments: 10)
   );
 
   group('BermoulliModel Tests', () {

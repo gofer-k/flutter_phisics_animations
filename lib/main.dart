@@ -1,4 +1,4 @@
-import 'package:first_flutter_app/BermoulliModelTypes.dart';
+import 'package:first_flutter_app/bermoulli_model_types.dart';
 import 'package:first_flutter_app/bermoulli_model.dart';
 import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
 import 'package:first_flutter_app/dynamic_label.dart';
@@ -85,15 +85,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   // Variables to hold the parsed values (optional, but good for direct use)
   final BermoulliModel _model = BermoulliModel(
-      area: Area(begin: 40.0, end:20.0),
+      area: Area(begin: 0.4, end:0.2),
       levelGround: LevelFromGround(begin: 0.0, end: 1.0),
       beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
       beginPressure: Pressure(begin: 990.0, end: 1500.0),
       density: Density.water,
       path: SigmoidCurve(
-          Range(begin: -1.0, end: 1.0),
-          Range(begin: 0.0, end: 1.0),
-          100));
+          xRange: Range(begin: -1.0, end: 1.0),
+          yRange: Range(begin: 0.0, end: 1.0),
+          segments: 100));
+
   late double _currentSpeedFlow ;
   late double _currentPressure;
   late double _currentLevel;
