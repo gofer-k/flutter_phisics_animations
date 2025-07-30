@@ -12,28 +12,9 @@ class BernoulliPainter extends CustomPainter {
   final Color originalCurveColor;
   final Color offsetCurveColor;
   final double strokeWidth;
-  // final double startPipeArea; // How far to offset the parallel curves
-  // final double endPipeArea; // How far to offset the parallel curves
-  // final double startLevel;
-  // final double endLevel;
-  // final int segments; // Number of segments to approximate the parallel curve
   final List<double> dashPattern;
   final BermoulliModel model;
   
-  // BernoulliPainter({
-  //   required this.curve,
-  //   required this.animationProgress,
-  //   this.originalCurveColor = Colors.blue,
-  //   this.offsetCurveColor = Colors.green,
-  //   this.strokeWidth = 2.0,
-  //   required this.startPipeArea,
-  //   required this.endPipeArea,
-  //   required this.startLevel,
-  //   required this.endLevel,
-  //   this.segments = 50, // More segments = smoother, but more computation
-  //   required this.dashPattern,
-  // });
-
   BernoulliPainter({
     required this.curve,
     required this.animationProgress,
@@ -55,33 +36,34 @@ class BernoulliPainter extends CustomPainter {
     // --- 1. Define and get the full original path ---
     final Path path = Path();
 
-    // -- Sigmoid function shape
-    // S(x)= 1 / (1 e^(-x))
-    final Offset centerPoint = Offset(size.width / 2, size.height / 2);
+    // // -- Sigmoid function shape
+    // // S(x)= 1 / (1 e^(-x))
+    // final Offset centerPoint = Offset(size.width / 2, size.height / 2);
+    //
+    // // Generate the points for the sigmoid function
+    // final double xMin = -1;
+    // final double xMax = 1;
+    // final double yRange = 0.5;
+    // final int segments = 100;
+    // final double xRange = xMax - xMin;
+    //
+    // final double desiredCurveWidthInViewport = size.width * 0.8;
+    // final double xScale = desiredCurveWidthInViewport / xRange;
+    // final yScale = centerPoint.dy - size.height - model.levelGround.begin;
+    //
+    // final List<Offset> points = List.generate(segments + 1, (i) {
+    //   final double xNorm = (i / segments) * xRange + xMin;
+    //   final double y = 1.0 / (1.0 + math.exp(-xNorm * 20)); // Multiplying by 5 makes it steep
+    //   // Map y from [0, 1] to [-yRange / 2, yRange / 2] to center it vertically
+    //   // and then scale by our desired visual height (yScale)
+    //   final double yInViewportSpace = (y - 0.5) * yRange * yScale;
+    //   // Scale the normalizedX to the desired width in viewport
+    //   final double xInViewportSpace = xNorm * xScale;
+    //   // Translate to viewport center
+    //   return Offset(centerPoint.dx + xInViewportSpace, centerPoint.dy + yInViewportSpace);
+    // });
 
-    // Generate the points for the sigmoid function
-    final double xMin = -1;
-    final double xMax = 1;
-    final double yRange = 0.5;
-    final int segments = 100;
-    final double xRange = xMax - xMin;
-
-    final double desiredCurveWidthInViewport = size.width * 0.8;
-    final double xScale = desiredCurveWidthInViewport / xRange;
-    final yScale = centerPoint.dy - size.height - model.levelGround.begin;
-
-    final List<Offset> points = List.generate(segments + 1, (i) {
-      final double xNorm = (i / segments) * xRange + xMin;
-      final double y = 1.0 / (1.0 + math.exp(-xNorm * 20)); // Multiplying by 5 makes it steep
-      // Map y from [0, 1] to [-yRange / 2, yRange / 2] to center it vertically
-      // and then scale by our desired visual height (yScale)
-      final double yInViewportSpace = (y - 0.5) * yRange * yScale;
-      // Scale the normalizedX to the desired width in viewport
-      final double xInViewportSpace = xNorm * xScale;
-      // Translate to viewport center
-      return Offset(centerPoint.dx + xInViewportSpace, centerPoint.dy + yInViewportSpace);
-    });
-
+    final points = model.path.getNormalizedPath(size);
     path.moveTo(points.first.dx, points.first.dy);
     for (Offset p in points.skip(1)) {
       path.lineTo(p.dx, p.dy);

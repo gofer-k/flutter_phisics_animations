@@ -32,6 +32,7 @@ class SigmoidCurve extends PipePath {
     }
   }
 
+  @override
   PathOffsets getNormalizedPath(Size size) {
     PathOffsets normalizedPath = PathOffsets.empty(growable: true);
     final xLength = xRange.end - xRange.begin;

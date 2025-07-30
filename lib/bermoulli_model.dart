@@ -10,10 +10,10 @@ class BermoulliModel {
   static final Length _length = Length(begin: 0.0, end: 10.0); // [m]
   get length => _length;
 
-  Area area = Area(begin: 0.3, end: 0.7);
-  LevelFromGround levelGround = LevelFromGround(begin: 0.0, end: 0.5);
-  SpeedFlow beginSpeed = SpeedFlow(begin: 0.0, end: 20.0);
-  Pressure beginPressure = Pressure(begin: 990.0, end: 1500.0);
+  Area area = Area(begin: 0.1, end: 0.7); // [m]
+  LevelFromGround levelGround = LevelFromGround(begin: 0.0, end: 0.5);  // [m]
+  SpeedFlow beginSpeed = SpeedFlow(begin: 0.0, end: 20.0);  // [m/s]
+  Pressure beginPressure = Pressure(begin: 990.0, end: 1500.0); // [kPa]
   Density density = Density.water; // [kg/m^3];
   final PipePath path;
   late AreaPath areaPath;
@@ -50,11 +50,11 @@ class BermoulliModel {
   }
 
   double currentLevelGround(int indexPath) {
-    // TODO: Fxx calculation is not correct:
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
-      return levelGround.begin +
-          (levelGround.end - levelGround.begin) *
-              path.pathOfPoints[indexPath].dy;
+      final y_first = path.pathOfPoints.first.dy;
+      final y__last = path.pathOfPoints.last.dy;
+      final y_norm = (path.pathOfPoints[indexPath].dy - y_first) / (y__last - y_first);
+      return levelGround.begin + (levelGround.end - levelGround.begin) * y_norm;
     }
     if (kDebugMode) {
       print("currentLevelGround: Incorrect indexPath: $indexPath");
@@ -65,7 +65,6 @@ class BermoulliModel {
   double currentPressure(int indexPath) {
     // TODO: Fxx calculation is not correct:
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
-      // p1 + rho * g * h1 + rho * v1 / 2 = p2 + rho * g * h2 + rho * v2 / 2
       final v1 = beginSpeed.value;
       final v2 = currentSpeedFlow(indexPath);
       final h1 = levelGround.begin;
@@ -73,7 +72,8 @@ class BermoulliModel {
       final p1 = beginPressure.value;
       final rho = density.value;
       final g = 9.81;
-      return p1 + rho * g * h1 + rho * v1 / 2 - rho * g * h2 - rho * v2 / 2;
+      // p1 + rho * g * h1 + rho * v1^2 / 2 = p2 + rho * g * h2 + rho * v2^2 / 2
+      return p1 + 0.5 * rho * (v1 * v1 - v2 * v2 ) + rho * g * (h1 - h2);
     }
     if (kDebugMode) {
       print("currentPressure: Incorrect indexPath: $indexPath");

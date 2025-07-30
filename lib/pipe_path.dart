@@ -22,4 +22,6 @@ abstract class PipePath {
   }
 
   void generate();
+
+  PathOffsets getNormalizedPath(Size size);
 }
