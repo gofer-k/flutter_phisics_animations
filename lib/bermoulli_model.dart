@@ -73,7 +73,8 @@ class BermoulliModel {
       final rho = density.value;
       final g = 9.81;
       // p1 + rho * g * h1 + rho * v1^2 / 2 = p2 + rho * g * h2 + rho * v2^2 / 2
-      return p1 + 0.5 * rho * (v1 * v1 - v2 * v2 ) + rho * g * (h1 - h2);
+      return p1 +
+          rho * (0.5 * (v1 * v1 - v2 * v2) + g * (h1 - h2));
     }
     if (kDebugMode) {
       print("currentPressure: Incorrect indexPath: $indexPath");

@@ -85,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   // Variables to hold the parsed values (optional, but good for direct use)
   final BermoulliModel _model = BermoulliModel(
-      area: Area(begin: 0.4, end:0.2),
+      area: Area(begin: 0.1, end:0.1),
       levelGround: LevelFromGround(begin: 0.0, end: 1.0),
       beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
       beginPressure: Pressure(begin: 990.0, end: 1500.0),
@@ -337,6 +337,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  void _stepCurveAnimation(bool forward) {
+    setState(() {
+      if (forward) {
+        _curveAnimationController.forward(
+            from: _curveAnimationController.value < _curveAnimationController.lowerBound ? _curveAnimationController.value + 5 : 0.0);
+      }
+      else {
+        _curveAnimationController.reverse(
+            from: _curveAnimationController.value > _curveAnimationController.upperBound ? _curveAnimationController.value - 5.0);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width
@@ -445,9 +458,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         Row(mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
+              onPressed: () { _stepCurveAnimation(false); },
+              child: Icon(Icons.skip_previous),
+            ),
+            ElevatedButton(
               onPressed: _toggleCurveAnimation, // Button to trigger/restart animation
               child: Icon(
                 _curveAnimationController.isAnimating ? Icons.pause : Icons.play_arrow),
+            ),
+            ElevatedButton(
+              onPressed: () { _stepCurveAnimation(true); },
+              child: Icon(Icons.skip_next),
             ),
           ],
         ),
