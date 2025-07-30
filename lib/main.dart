@@ -341,11 +341,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     setState(() {
       if (forward) {
         _curveAnimationController.forward(
-            from: _curveAnimationController.value < _curveAnimationController.lowerBound ? _curveAnimationController.value + 5 : 0.0);
+            from: _curveAnimationController.value < _curveAnimationController.lowerBound ?
+            _curveAnimationController.value + 5 :
+            _curveAnimationController.lowerBound);
       }
       else {
         _curveAnimationController.reverse(
-            from: _curveAnimationController.value > _curveAnimationController.upperBound ? _curveAnimationController.value - 5.0);
+            from: _curveAnimationController.value > _curveAnimationController.upperBound ?
+            _curveAnimationController.value - 5.0 :
+            _curveAnimationController.upperBound);
       }
     });
   }
