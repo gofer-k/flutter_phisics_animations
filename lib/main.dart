@@ -101,6 +101,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   final int _initAnimationDurationMilliSecs = 3000;
   final double _initStartSpeedFlow = 4.0;
+  final animationStep = 0.02;  // 1 / 50 step of animation
 
   @override
   void initState() {
@@ -337,23 +338,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
-  void _stepCurveAnimation(bool forward) {
-    setState(() {
-      if (forward) {
-        _curveAnimationController.forward(
-            from: _curveAnimationController.value < _curveAnimationController.lowerBound ?
-            _curveAnimationController.value + 5 :
-            _curveAnimationController.lowerBound);
-      }
-      else {
-        _curveAnimationController.reverse(
-            from: _curveAnimationController.value > _curveAnimationController.upperBound ?
-            _curveAnimationController.value - 5.0 :
-            _curveAnimationController.upperBound);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // Get the screen width
@@ -462,7 +446,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         Row(mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: () { _stepCurveAnimation(false); },
+              onPressed: () {
+                _curveAnimationController.value  =
+                    _curveAnimationController.value - animationStep;
+                },
               child: Icon(Icons.skip_previous),
             ),
             ElevatedButton(
@@ -471,7 +458,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 _curveAnimationController.isAnimating ? Icons.pause : Icons.play_arrow),
             ),
             ElevatedButton(
-              onPressed: () { _stepCurveAnimation(true); },
+              onPressed: () {
+                _curveAnimationController.value  =
+                    _curveAnimationController.value + animationStep;
+                },
               child: Icon(Icons.skip_next),
             ),
           ],
