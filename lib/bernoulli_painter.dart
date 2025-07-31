@@ -27,13 +27,7 @@ class BernoulliPainter extends CustomPainter {
   
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw center axes
-    final Paint axisPaint = Paint()
-      ..color = Colors.grey
-      ..strokeWidth = 1;
-
-    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), axisPaint); // vertical axis
-    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), axisPaint); // horizontal axis
+    _drawArrow(canvas,size);
 
     final Paint originPaint = Paint()
       ..color = originalCurveColor
@@ -81,6 +75,25 @@ class BernoulliPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     _drawPipeBorder(canvas, bordersPaint, leftBorderPoints);
     _drawPipeBorder(canvas, bordersPaint, rightBorderPoints);
+  }
+
+  void _drawArrow(Canvas canvas, Size size) {
+    final Paint axisPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 2;
+
+    final xStart = size.width * 0.25;
+    final xEnd = size.width * 0.75;
+    final yPos = size.height - 20.0;
+
+    canvas.drawLine(Offset(xStart, yPos), Offset(xEnd, yPos), axisPaint);
+    // Arrow
+    canvas.drawLine(
+        Offset(xEnd - 15.0, yPos - 5.0),
+        Offset(xEnd, yPos), axisPaint);
+    canvas.drawLine(
+        Offset(xEnd - 15.0, yPos + 5.0),
+        Offset(xEnd, yPos), axisPaint);
   }
 
   void _drawFlowPath(Canvas canvas,

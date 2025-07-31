@@ -396,7 +396,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           Divider(),
           const SizedBox(height: 10), // Add some spacing
           
-          animationPlaybackPanel(Size(screenSize.width * 0.8, 250)),
+          animationPlaybackPanel(Size(screenSize.width * 0.9, 250)),
           
           const Divider(),
 
