@@ -109,7 +109,7 @@ void main() {
       final size = Size(300, 200);
 
       final curve = SigmoidCurve(xRange: xRange, yRange: yRange, segments: segments);
-      final normalizedPath = curve.getNormalizedPath(size);
+      final normalizedPath = curve.getNormalizedPath(size, Offset(0.0, 0.0));
 
       expect(normalizedPath.length, segments + 1);
 

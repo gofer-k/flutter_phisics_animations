@@ -91,7 +91,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       beginPressure: Pressure(begin: 990.0, end: 1500.0),
       density: Density.water,
       path: SigmoidCurve(
-          xRange: Range(begin: -1.0, end: 1.0),
+          // xRange: Range(begin: 0.0, end: 50.0),
+          xRange: Range(begin: -25.0, end: 25.0),
           yRange: Range(begin: 0.0, end: 1.0),
           segments: 100));
 
@@ -473,9 +474,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget animationResultParameters() {
     return Column(
       children: [
-        displayParameterResult(r'\text{p = }', r' kPa',  _currentPressure),
-        displayParameterResult(r'\text{h = }', r' m', _currentLevel),
-        displayParameterResult(r'\text{V = }', r' \frac{m}{s}', _currentSpeedFlow),
+        displayParameterResult(r'p_2 = ', r' kPa',  _currentPressure),
+        displayParameterResult(r'h_2 = ', r' m', _currentLevel),
+        displayParameterResult(r'V_2 = ', r' \frac{m}{s}', _currentSpeedFlow),
       ],
     );
   }

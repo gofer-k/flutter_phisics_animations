@@ -27,6 +27,14 @@ class BernoulliPainter extends CustomPainter {
   
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw center axes
+    final Paint axisPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1;
+
+    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), axisPaint); // vertical axis
+    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), axisPaint); // horizontal axis
+
     final Paint offsetPaint = Paint()
       ..color = offsetCurveColor
       ..strokeWidth = strokeWidth
@@ -35,35 +43,8 @@ class BernoulliPainter extends CustomPainter {
 
     // --- 1. Define and get the full original path ---
     final Path path = Path();
+    final points = model.path.getNormalizedPath(size, Offset(0.0, 0.0));
 
-    // // -- Sigmoid function shape
-    // // S(x)= 1 / (1 e^(-x))
-    // final Offset centerPoint = Offset(size.width / 2, size.height / 2);
-    //
-    // // Generate the points for the sigmoid function
-    // final double xMin = -1;
-    // final double xMax = 1;
-    // final double yRange = 0.5;
-    // final int segments = 100;
-    // final double xRange = xMax - xMin;
-    //
-    // final double desiredCurveWidthInViewport = size.width * 0.8;
-    // final double xScale = desiredCurveWidthInViewport / xRange;
-    // final yScale = centerPoint.dy - size.height - model.levelGround.begin;
-    //
-    // final List<Offset> points = List.generate(segments + 1, (i) {
-    //   final double xNorm = (i / segments) * xRange + xMin;
-    //   final double y = 1.0 / (1.0 + math.exp(-xNorm * 20)); // Multiplying by 5 makes it steep
-    //   // Map y from [0, 1] to [-yRange / 2, yRange / 2] to center it vertically
-    //   // and then scale by our desired visual height (yScale)
-    //   final double yInViewportSpace = (y - 0.5) * yRange * yScale;
-    //   // Scale the normalizedX to the desired width in viewport
-    //   final double xInViewportSpace = xNorm * xScale;
-    //   // Translate to viewport center
-    //   return Offset(centerPoint.dx + xInViewportSpace, centerPoint.dy + yInViewportSpace);
-    // });
-
-    final points = model.path.getNormalizedPath(size);
     path.moveTo(points.first.dx, points.first.dy);
     for (Offset p in points.skip(1)) {
       path.lineTo(p.dx, p.dy);

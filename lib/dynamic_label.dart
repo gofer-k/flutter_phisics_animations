@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 class DynamicLabel extends StatelessWidget {
   final String labelText;
 
-  DynamicLabel({Key? key, required this.labelText,}) : super(key: key);
+  const DynamicLabel({super.key, required this.labelText,});
 
   @override
   Widget build(BuildContext context) {

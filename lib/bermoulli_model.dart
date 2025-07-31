@@ -8,7 +8,7 @@ import 'density.dart';
 
 class BermoulliModel {
   static final Length _length = Length(begin: 0.0, end: 10.0); // [m]
-  get length => _length;
+  Length get length => _length;
 
   Area area = Area(begin: 0.1, end: 0.7); // [m]
   LevelFromGround levelGround = LevelFromGround(begin: 0.0, end: 0.5);  // [m]
@@ -51,10 +51,9 @@ class BermoulliModel {
 
   double currentLevelGround(int indexPath) {
     if (indexPath >= 0 && indexPath < areaPath.areaInPath.length) {
-      final y_first = path.pathOfPoints.first.dy;
-      final y__last = path.pathOfPoints.last.dy;
-      final y_norm = (path.pathOfPoints[indexPath].dy - y_first) / (y__last - y_first);
-      return levelGround.begin + (levelGround.end - levelGround.begin) * y_norm;
+      final yFirst = path.pathOfPoints.first.dy;
+      final yLast = path.pathOfPoints.last.dy;
+      return PipePath.normalizeValue(path.pathOfPoints[indexPath].dy, yFirst, yLast, levelGround);
     }
     if (kDebugMode) {
       print("currentLevelGround: Incorrect indexPath: $indexPath");
@@ -96,10 +95,6 @@ class BermoulliModel {
     _generate();
   }
 
-  void _generate() {
-    areaPath = AreaPath(pipe: path, areaConstrains: area);
-  }
-
   void regenerateAll(Area newArea,
       LevelFromGround newLevelGround,
       SpeedFlow newBeginSpeed,
@@ -109,5 +104,9 @@ class BermoulliModel {
     beginSpeed = newBeginSpeed;
     beginPressure = newBeginPressure;
     _generate();
+  }
+
+  void _generate() {
+    areaPath = AreaPath(pipe: path, areaConstrains: area);
   }
 }

@@ -23,5 +23,10 @@ abstract class PipePath {
 
   void generate();
 
-  PathOffsets getNormalizedPath(Size size);
+  static double normalizeValue(double current, double begin, double end, Range domainRange) {
+    final yNorm = (current - begin) / (end - begin);
+    return domainRange.begin + (domainRange.end - domainRange.begin) * yNorm;
+  }
+
+  PathOffsets getNormalizedPath(Size size, Offset origin);
 }
