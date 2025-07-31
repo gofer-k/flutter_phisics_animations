@@ -19,7 +19,7 @@ class BernoulliPainter extends CustomPainter {
     required this.curve,
     required this.animationProgress,
     this.originalCurveColor = Colors.blue,
-    this.offsetCurveColor = Colors.green,
+    this.offsetCurveColor = Colors.grey,
     this.strokeWidth = 2.0,
     required this.dashPattern,
     required this.model,
@@ -35,8 +35,8 @@ class BernoulliPainter extends CustomPainter {
     canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), axisPaint); // vertical axis
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), axisPaint); // horizontal axis
 
-    final Paint offsetPaint = Paint()
-      ..color = offsetCurveColor
+    final Paint originPaint = Paint()
+      ..color = originalCurveColor
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -49,7 +49,7 @@ class BernoulliPainter extends CustomPainter {
     for (Offset p in points.skip(1)) {
       path.lineTo(p.dx, p.dy);
     }
-    canvas.drawPath(path, offsetPaint);
+    canvas.drawPath(path, originPaint);
 
     Path animatedOriginalPath = Path();
     for (ui.PathMetric pathMetric in path.computeMetrics()) {
@@ -60,8 +60,8 @@ class BernoulliPainter extends CustomPainter {
     }
 
     // Calculate and draw parallel paths (only if there's something to draw) ---
-    List<Offset> leftBorderPoints = _generateBoardPaths(path.computeMetrics(), true); // For one side
-    List<Offset> rightBorderPoints = _generateBoardPaths(path.computeMetrics(), false); // For the other side
+    List<Offset> leftBorderPoints = _generateBoardPaths(size, path.computeMetrics(), true); // For one side
+    List<Offset> rightBorderPoints = _generateBoardPaths(size, path.computeMetrics(), false); // For the other side
 
     // --- Draw the Flow Path (Animated Segment) ---
     if (animationProgress > 0) { // Only start drawing flow after animation begins
@@ -74,44 +74,13 @@ class BernoulliPainter extends CustomPainter {
       );
     }
 
-    // Use the helper to draw the original path
-    _drawDashedPath(canvas, animatedOriginalPath, dashPattern, originalCurveColor);
-
-    _drawPipeBorder(canvas, offsetPaint, leftBorderPoints);
-    _drawPipeBorder(canvas, offsetPaint, rightBorderPoints);
-  }
-
-  // Helper method to draw a path with a dash pattern
-  void _drawDashedPath(Canvas canvas, Path path, List<double> dashArray, Color dashColor) {
-    // Use the paint's color if dashColor is not provided, otherwise override
-    final Paint dashPaint = Paint()
-      ..color = dashColor // Use specific dash color or fallback
+    final Paint bordersPaint = Paint()
+      ..color = offsetCurveColor
       ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke // Dashes are always strokes
-      ..strokeCap = StrokeCap.square;
-
-    double distance = 0.0;
-    bool draw = true;
-    int dashIndex = 0;
-
-    for (ui.PathMetric metric in path.computeMetrics()) {
-      while (distance < metric.length) {
-        double dashLength = dashArray[dashIndex % dashArray.length];
-        if (draw) {
-          canvas.drawPath(
-            metric.extractPath(distance, math.min(distance + dashLength, metric.length)),
-            dashPaint, // Use the potentially overridden dashPaint
-          );
-        }
-        distance += dashLength;
-        draw = !draw;
-        dashIndex++;
-      }
-      distance = 0; // Reset for next metric if path has multiple contours (unlikely for simple Bezier)
-      draw = true;
-      dashIndex = 0;
-    }
-    canvas.drawPath(path, dashPaint);
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    _drawPipeBorder(canvas, bordersPaint, leftBorderPoints);
+    _drawPipeBorder(canvas, bordersPaint, rightBorderPoints);
   }
 
   void _drawFlowPath(Canvas canvas,
@@ -229,20 +198,20 @@ class BernoulliPainter extends CustomPainter {
     }
   }
 
-  void _drawPipeBorder(Canvas canvas, Paint offsetPaint, final List<Offset> offsetPoints1) {
-    if (offsetPoints1.length > 1) {
+  void _drawPipeBorder(Canvas canvas, Paint offsetPaint, final List<Offset> offsetPoints) {
+    if (offsetPoints.length > 1) {
       Path parallelPath1 = Path();
-      parallelPath1.moveTo(offsetPoints1.first.dx, offsetPoints1.first.dy);
-      for (int i = 1; i < offsetPoints1.length; i++) {
-        parallelPath1.lineTo(offsetPoints1[i].dx, offsetPoints1[i].dy);
+      parallelPath1.moveTo(offsetPoints.first.dx, offsetPoints.first.dy);
+      for (int i = 1; i < offsetPoints.length; i++) {
+        parallelPath1.lineTo(offsetPoints[i].dx, offsetPoints[i].dy);
       }
       canvas.drawPath(parallelPath1, offsetPaint);
     }
   }
 
-  List<Offset> _generateBoardPaths(PathMetrics originPath, bool leftSide) {
+  List<Offset> _generateBoardPaths(Size size, PathMetrics originPath, bool leftSide) {
     List<Offset> pathPoints = [];
-
+    final normAreaUnit = (model.path.xRange.end - model.path.xRange.begin).abs();
     for (ui.PathMetric pathMetric in originPath) {
       final double totalLength = pathMetric.length;
       if (totalLength <= 0) continue;
@@ -259,7 +228,7 @@ class BernoulliPainter extends CustomPainter {
             Offset(-tangent.vector.dy, tangent.vector.dx) :
             Offset(tangent.vector.dy, -tangent.vector.dx)).normalized(); // Normal vector
 
-          double offsetDistance = model.area.begin + t * (model.area.end - model.area.begin);
+          double offsetDistance = (model.area.begin + t * (model.area.end - model.area.begin)) * normAreaUnit;
           pathPoints.add(point + normal * offsetDistance);
         }
       }

@@ -81,20 +81,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late TextEditingController _startSpeedFlowController;
   late TextEditingController _pressureAtStartController;
   
-  // Add more controllers as needed for other factors (density, pressure, etc.)
-
-  // Variables to hold the parsed values (optional, but good for direct use)
-  final BermoulliModel _model = BermoulliModel(
-      area: Area(begin: 0.1, end:0.1),
-      levelGround: LevelFromGround(begin: 0.0, end: 1.0),
-      beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
-      beginPressure: Pressure(begin: 990.0, end: 1500.0),
-      density: Density.water,
-      path: SigmoidCurve(
-          // xRange: Range(begin: 0.0, end: 50.0),
-          xRange: Range(begin: -25.0, end: 25.0),
-          yRange: Range(begin: 0.0, end: 1.0),
-          segments: 100));
+   // Variables to hold the parsed values (optional, but good for direct use)
+  final pipeLength = 50.0;  // [m]
+  late final BermoulliModel _model;
 
   late double _currentSpeedFlow ;
   late double _currentPressure;
@@ -108,8 +97,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    _model.beginPressure.value = 1000.0;
-    _model.beginSpeed.value = 4.0;
+    _model = initModel();
+
     _currentSpeedFlow = _model.beginSpeed.value;
     _currentPressure = _model.beginPressure.value;
     _currentLevel = _model.levelGround.begin;
@@ -164,6 +153,22 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _pressureAtStartController.dispose();
     _expandController.dispose();
     super.dispose();
+  }
+
+  BermoulliModel initModel() {
+    BermoulliModel model = BermoulliModel(
+        area: Area(begin: 0.1, end:0.1),
+        levelGround: LevelFromGround(begin: 0.0, end: 1.0),
+        beginSpeed: SpeedFlow(begin: 0.0, end: 20.0),
+        beginPressure: Pressure(begin: 990.0, end: 1500.0),
+        density: Density.water,
+        path: SigmoidCurve(
+            xRange: Range(begin: -pipeLength / 2.0, end: pipeLength / 2.0),
+            yRange: Range(begin: 0.0, end: 1.0),
+            segments: 100));
+    model.beginPressure.value = 1000.0;
+    model.beginSpeed.value = 4.0;
+    return model;
   }
 
   void _toggleExpandParameters() {
