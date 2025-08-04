@@ -25,21 +25,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "Bernoulli expressing",
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -49,15 +34,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -279,19 +255,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _toggleCurveAnimation(); // Restart animation with new duration
   }
 
-  void _handleStartPressureSubmit(String value) {
+  // void _handleStartPressureSubmit(String value) {
+  //   if (!mounted) return;
+  //   final double? newPressure = double.tryParse(value);
+  //   if (newPressure != null &&
+  //       newPressure >= 0) { // Assuming area can't be negative
+  //     setState(() {
+  //       _model.beginPressure.value = newPressure;
+  //       _pressureAtStartController.text = newPressure.toString();
+  //     });
+  //     _toggleCurveAnimation();
+  //   } else {
+  //     _pressureAtStartController.text = _model.beginPressure.value.toString();
+  //   }
+  // }
+  void _handleStartPressure(double value) {
     if (!mounted) return;
-    final double? newPressure = double.tryParse(value);
-    if (newPressure != null &&
-        newPressure >= 0) { // Assuming area can't be negative
-      setState(() {
-        _model.beginPressure.value = newPressure;
-        _pressureAtStartController.text = newPressure.toString();
-      });
-      _toggleCurveAnimation();
-    } else {
-      _pressureAtStartController.text = _model.beginPressure.value.toString();
-    }
+    setState(() {
+      _model.beginPressure.value = value;
+      _pressureAtStartController.text = value.toString();
+    });
+    _toggleCurveAnimation();
   }
 
   void _handleStartHighSubmit(String value) {
@@ -513,7 +497,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           sizeFactor: _expandAnimationParameters,
           child: Column(
             children: [
-              DisplayExpression(context: context, expression: r'\text{Pole przekroju }[cm^2]', scale: 1.2),
+              DisplayExpression(context: context, expression: r'\text{Pole przekroju (100..700)} cm^2', scale: 1.2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Column(
@@ -535,15 +519,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+              DisplayExpression(context: context, expression: r'\text{Prędkość (0.0..20)} \frac{m}{s}', scale: 1.2),
               FactorSlider(
-                label: r'\text{Prędkość } V_1 \frac{m}{s}',
+                label: r'V_1',
                 initialValue: _model.beginSpeed.value,
                 minValue: 0.0,
                 maxValue: 20.0,
                 onChanged: _handleStartSpeed,),
-              DisplayExpression(context: context, expression: r'\text{Poziom }[cm]', scale: 1.2),
+              DisplayExpression(context: context, expression: r'\text{Poziom podłoża (0.0..1.0)} m', scale: 1.2),
               Padding( // Optional: Add padding around the Row
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 2.0),
                 child: Row(
                   children: <Widget>[
                     Expanded(
@@ -564,11 +549,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-              FactorInputRow(
-                label: r'\text{Ciśnienie } p_1 [kPa]',
-                controller: _pressureAtStartController,
-                onSubmitted: _handleStartPressureSubmit,
-              ),
+              DisplayExpression(context: context, expression: r'\text{Ciśnienie (900..1500)} kPa', scale: 1.2),
+              FactorSlider(
+                label: r'p_1',
+                initialValue: _model.beginPressure.value,
+                minValue: 900.0,
+                maxValue: 1500.0,
+                onChanged: _handleStartPressure),
               //TODO::
               // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
             ],
