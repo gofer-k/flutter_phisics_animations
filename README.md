@@ -1,11 +1,11 @@
 
-# first_flutter_app
+# A collection of physics animation topics for educational and dynamic use cases.
 
-The first Flutter project.
+TODO
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+TODO
 
 A few resources to get you started if this is your first Flutter project:
 
