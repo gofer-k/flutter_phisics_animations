@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:first_flutter_app/bermoulli_model_types.dart';
 import 'package:first_flutter_app/bermoulli_model.dart';
 import 'package:first_flutter_app/bernoulli_formula_anim_curve.dart';
@@ -5,6 +7,7 @@ import 'package:first_flutter_app/dynamic_label.dart';
 import 'package:first_flutter_app/pipe_path.dart';
 import 'package:first_flutter_app/sigmoid_pipe_path.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'bernoulli_painter.dart';
 import 'density.dart';
@@ -84,7 +87,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
     );
 
-    // 3. Create Animation (e.g., CurvedAnimation for easing)
     _expandAnimationParameters = CurvedAnimation(
       parent: _expandController,
       curve: Curves.easeInOut,
@@ -93,7 +95,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       _expandController.forward();
     }
 
-    // Initialize controllers with default values
     _startAreaController =
         TextEditingController(text: _model.area.begin.toString());
     _endAreaController =
@@ -215,7 +216,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             Pressure(begin: startPressure, end: _model.beginPressure.end));
         _rebuildCurveAnimation();
       }
-      // _rebuildCurveAnimation();
     });
   }
 
@@ -330,10 +330,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width
-    final deviceData = MediaQuery.of(context);
-
-    final Size screenSize = deviceData.size;
+    final Size screenSize = MediaQuery.sizeOf(context);
 
     // Define breakpoints for different screen sizes
     double breakpointSmall = 600.0;
@@ -343,27 +340,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (screenSize.width < breakpointSmall) {
       content = buildMobileLayout(screenSize);
     }
-    // else if (screenSize.width < breakpointMedium) {
-    //   // content = buildTabletLayout();
-    // }
     else {
-      content = buildDesktopLayout();
+      content = buildDesktopLayout(screenSize);
     }
 
-    return SafeArea(child:
-      Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text("Ogólna postać formuli Bernoulli"),
-        ),
-        body: Center(
-          child: Container(
-            width: screenSize.width * 0.9,
-            color: Colors.white,
-            child: content,
-          ),
-        )
-      )
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text("Ogólna postać formuli Bernoulli"),
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Check the available width
+          double width = screenSize.width < breakpointSmall ? constraints.maxWidth : constraints.maxWidth;
+          return Center(
+            child: Container(
+              width: width,
+              color: Colors.white,
+              child: content,
+            ),
+          );
+        }
+      ),
     );
   }
 
@@ -384,11 +382,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           
           const Divider(),
 
-          animationResultParameters(),
+          animationResultParametersMobileMode(),
 
           const Divider(),
 
-          animationInputParameters(),
+          animationInputParametersMobileMode(),
   
           const SizedBox(height: 20),
         ],
@@ -396,8 +394,37 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget buildDesktopLayout() {
-    return Text("Desktop content display here");
+  Widget buildDesktopLayout(Size screenSize) {
+    final LeftPanelWidth = screenSize.width * 0.4;
+    final rightPanelWidth = screenSize.width * 0.4;
+    final middlePanelWidth = screenSize.width - LeftPanelWidth - rightPanelWidth;
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch, // Center column content
+        children: [
+          DisplayExpression(
+              context: context,
+              expression: r'\frac{V_1^2}{2} + g \cdot h_1 + \frac{p_1}{\rho} = \frac{V_2^2}{2} + g \cdot h_2 + \frac{p_2}{\rho}', scale: 1.5),
+          Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                animationPlaybackPanel(Size(LeftPanelWidth, screenSize.height * 0.4)),
+                SizedBox(width: middlePanelWidth),
+                Expanded(child: animationInputParametersDesktopMode(),),
+              ],
+            ),
+          ),
+          Divider(),
+          const SizedBox(height: 10),
+          animationResultParametersDesktopMode(),
+        ],
+      ),
+    );
   }
 
   Widget displayParameterResult(String label, String unit, double value) {
@@ -460,7 +487,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget animationResultParameters() {
+  Widget animationResultParametersMobileMode() {
     return Column(
       children: [
         displayParameterResult(r'p_2 = ', r' kPa',  _currentPressure),
@@ -469,8 +496,36 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ],
     );
   }
-  
-  Widget animationInputParameters() {
+
+  Widget animationResultParametersDesktopMode() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        children: [
+          Row(
+            spacing: 12.0,
+            children: [
+              displayParameterResult(r'a_1 = ', r' m^2',  _model.area.begin),
+              displayParameterResult(r'a_2 = ', r' m^2',  _model.area.end),
+              displayParameterResult(r'h_1 = ', r' m', _model.levelGround.begin),
+              displayParameterResult(r'h_2 = ', r' m', _currentLevel),
+            ],
+          ),
+          Row(
+            spacing: 12.0,
+            children: [
+              displayParameterResult(r'p_1 = ', r' kPa',  _model.beginPressure.value),
+              displayParameterResult(r'p_2 = ', r' kPa',  _currentPressure),
+              displayParameterResult(r'V_1 = ', r' \frac{m}{s}', -_model.beginSpeed.value),
+              displayParameterResult(r'V_2 = ', r' \frac{m}{s}', _currentSpeedFlow),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget animationInputParametersMobileMode() {
     return Column(
       children: [
         InkWell(onTap: _toggleExpandParameters,
@@ -504,14 +559,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   children: <Widget>[
                     FactorSlider(
                       label: r'a_1',
-                      // initialValue: _areaAtBeginning,
                       initialValue: _model.area.begin,
                       minValue: 0.1,
                       maxValue: 0.7,
                       onChanged: _handleStartArea,),
                     FactorSlider(
                       label: r'a_2',
-                      // initialValue: _areaAtEnd,
                       initialValue: _model.area.end,
                       minValue: 0.1,
                       maxValue: 0.7,
@@ -527,7 +580,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 maxValue: 20.0,
                 onChanged: _handleStartSpeed,),
               DisplayExpression(context: context, expression: r'\text{Poziom podłoża (0.0..1.0)} m', scale: 1.2),
-              Padding( // Optional: Add padding around the Row
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2.0),
                 child: Row(
                   children: <Widget>[
@@ -538,7 +591,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         onSubmitted: _handleStartHighSubmit,
                       ),
                     ),
-                    const SizedBox(width: 8), // Spacing between the two FactorInputRows
+                    const SizedBox(width: 8)
                     Expanded(
                       child: FactorInputRow(
                         label: r'h_2',
@@ -562,6 +615,53 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
         ),
       ],
+    );
+  }
+
+  Widget animationInputParametersDesktopMode() {
+    return Padding(
+      padding: EdgeInsets.all(20.0),
+      child: Column(
+        // mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,  // Center column content
+        children: [
+          Text(
+            "Animation Parameters",
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.justify,
+          ),
+          DisplayExpression(
+              context: context, expression: r'\text{Pole przekroju (1  Fa700)} cm^2',
+              scale: 1.0),
+          FactorSlider(label: r'a_1', initialValue: _model.area.begin,
+            minValue: 0.1, maxValue: 0.7,
+            onChanged: _handleStartArea),
+          FactorSlider(label: r'a_2', initialValue: _model.area.end,
+              minValue: 0.1, maxValue: 0.7,
+              onChanged: _handleEndArea),
+          Divider(),
+          DisplayExpression(context: context, expression: r'\text{Prędkość (0.0..20)} \frac{m}{s}', scale: 1.0),
+          FactorSlider(label: r'V_1', initialValue: _model.beginSpeed.value,
+              minValue: 0.0, maxValue: 20.0,
+              onChanged: _handleStartSpeed),
+          Divider(),
+          DisplayExpression(context: context, expression: r'\text{Poziom podłoża (0.0..1.0)} m', scale: 1.0),
+          FactorInputRow(
+              label: r'h_2',
+              controller: _endHighController,
+              onSubmitted: _handleEndHighSubmit,
+          ),
+          DisplayExpression(context: context, expression: r'\text{Ciśnienie (900..1500)} kPa', scale: 1.2),
+          FactorSlider(
+              label: r'p_1',
+              initialValue: _model.beginPressure.value,
+              minValue: 900.0,
+              maxValue: 1500.0,
+              onChanged: _handleStartPressure),
+          //TODO::
+          // display_expression(context: context, expression: r'\text{Gęstość płynu } \rho', scale: 1.0, widgetWidth: widgetWidth),
+        ],
+      ),
     );
   }
 }

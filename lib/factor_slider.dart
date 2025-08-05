@@ -20,27 +20,21 @@ class FactorSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              flex: 3, // Give more space to the label
-              child: DisplayExpression(context: context, expression: label, scale: 1.2),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              flex: 4, // Give more space to the slider
-              child: Slider(
-                value: _currentSliderValue,
-                min: minValue,
-                max: maxValue,
-                // label: SliderThemeData.showValueIndicator,
-                onChanged: onChanged,
-              ),
-            ),
-          ]
+    return Row(
+      children: [
+        Padding(
+          padding: EdgeInsetsGeometry.only(right: 4.0),
+          child: DisplayExpression(context: context, expression: label, scale: 1.2),
         ),
+        Expanded(
+          child: Slider(
+            value: _currentSliderValue,
+            min: minValue,
+            max: maxValue,
+            onChanged: onChanged,
+          ),
+        ),
+      ]
     );
   }
 }

@@ -27,21 +27,17 @@ class FactorInputRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          Expanded(
-            flex: 2, // Give more space to the label
+          Padding(padding: EdgeInsets.only(right: 4.0),
             child: DisplayExpression(context: context, expression: label, scale: 1.5),
           ),
           const SizedBox(width: 8),
           Expanded(
-            flex: 2, // Give more space to the text field
             child: TextField(
               controller: controller,
               decoration: InputDecoration(
                 hintText: hintText ?? "Enter value",
                 isDense: true, // Makes the field a bit more compact
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                 border: const OutlineInputBorder(),
               ),
               keyboardType: keyboardType,
