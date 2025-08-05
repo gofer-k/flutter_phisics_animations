@@ -591,7 +591,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         onSubmitted: _handleStartHighSubmit,
                       ),
                     ),
-                    const SizedBox(width: 8)
+                    const SizedBox(width: 8),
                     Expanded(
                       child: FactorInputRow(
                         label: r'h_2',
