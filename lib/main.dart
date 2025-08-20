@@ -20,12 +20,15 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final bool _showDebugBanner = true; // Or some other logic to determine this
+
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: _showDebugBanner,
       title: "Bernoulli expressing",
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

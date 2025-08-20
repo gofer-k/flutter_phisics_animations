@@ -39,9 +39,6 @@ class BermoulliModel {
       return beginSpeed.value * areaPath.areaInPath.first /
           areaPath.areaInPath[indexPath];
     }
-    if (kDebugMode) {
-      print("currentSpeedFlow: Incorrect indexPath: $indexPath");
-    }
     return 0.0;
   }
 
@@ -54,9 +51,6 @@ class BermoulliModel {
       final yFirst = path.pathOfPoints.first.dy;
       final yLast = path.pathOfPoints.last.dy;
       return PipePath.normalizeValue(path.pathOfPoints[indexPath].dy, yFirst, yLast, levelGround);
-    }
-    if (kDebugMode) {
-      print("currentLevelGround: Incorrect indexPath: $indexPath");
     }
     return 0.0;
   }
@@ -74,9 +68,6 @@ class BermoulliModel {
       // p1 + rho * g * h1 + rho * v1^2 / 2 = p2 + rho * g * h2 + rho * v2^2 / 2
       return p1 +
           rho * (0.5 * (v1 * v1 - v2 * v2) + g * (h1 - h2));
-    }
-    if (kDebugMode) {
-      print("currentPressure: Incorrect indexPath: $indexPath");
     }
     return 0.0;
   }
