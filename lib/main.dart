@@ -255,20 +255,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _toggleCurveAnimation(); // Restart animation with new duration
   }
 
-  // void _handleStartPressureSubmit(String value) {
-  //   if (!mounted) return;
-  //   final double? newPressure = double.tryParse(value);
-  //   if (newPressure != null &&
-  //       newPressure >= 0) { // Assuming area can't be negative
-  //     setState(() {
-  //       _model.beginPressure.value = newPressure;
-  //       _pressureAtStartController.text = newPressure.toString();
-  //     });
-  //     _toggleCurveAnimation();
-  //   } else {
-  //     _pressureAtStartController.text = _model.beginPressure.value.toString();
-  //   }
-  // }
   void _handleStartPressure(double value) {
     if (!mounted) return;
     setState(() {
@@ -349,18 +335,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text("Ogólna postać formuli Bernoulli"),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Check the available width
-          double width = screenSize.width < breakpointSmall ? constraints.maxWidth : constraints.maxWidth;
-          return Center(
-            child: Container(
-              width: width,
-              color: Colors.white,
-              child: content,
-            ),
-          );
-        }
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Check the available width
+            double width = screenSize.width < breakpointSmall ? constraints.maxWidth : constraints.maxWidth;
+            return Center(
+              child: Container(
+                width: width,
+                color: Colors.white,
+                child: content,
+              ),
+            );
+          }
+        ),
       ),
     );
   }
