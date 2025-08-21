@@ -1,4 +1,5 @@
 
+import 'package:first_flutter_app/surface_tension_page.dart';
 import 'package:flutter/material.dart';
 
 import 'bermoulli_page.dart';
@@ -57,6 +58,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 Image.asset("assets/icon/ic_bermoulli_card.png", fit: BoxFit.contain),
                 "Bermoulli expression",
                 BermoulliPage(title: "Bermoulli expression")
+              ),
+              navigatingCard(
+                context,
+                Image.asset("assets/icon/ic_surface_tension_card.png", fit: BoxFit.contain),
+                "Surface tension",
+                SurfaceTensionPage()
               ),
             ],
           )

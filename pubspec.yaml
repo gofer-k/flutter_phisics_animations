@@ -64,6 +64,7 @@ flutter:
   assets:
     - assets/icon/ic_launcher.png
     - assets/icon/ic_bermoulli_card.png
+    - assets/icon/ic_surface_tension_card.png
   #   - images/a_dot_ham.jpeg
 
 flutter_icons:
