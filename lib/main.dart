@@ -1,5 +1,5 @@
 
-import 'package:first_flutter_app/surface_tension_page.dart';
+import 'package:first_flutter_app/surfacetension/surface_tension_page.dart';
 import 'package:flutter/material.dart';
 
 import 'bermoulli_page.dart';
