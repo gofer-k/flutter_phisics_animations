@@ -1,4 +1,5 @@
 import 'package:first_flutter_app/surfacetension/surface_tension_animation.dart';
+import 'package:first_flutter_app/widgets/display_parameter.dart';
 import 'package:flutter/material.dart';
 
 import '../display_expression.dart';
@@ -31,10 +32,12 @@ class SurfaceTensionPageState extends State<SurfaceTensionPage> with TickerProvi
             return Center(
               child: Column(
                 children: [
-                  DisplayExpression(context: context, expression: r"\gamma = \frac{F}{l} \quad [\frac{N}{m}]", scale: 1.5,),
+                  DisplayExpression(context: context, expression: r"\gamma = \frac{F}{l} \quad \frac{N}{m}", scale: 1.5,),
                   SizedBox(height: 10),
                   animationContainer(Size(width, width)),
                   // TODO: Animation parameters form
+                  SizedBox(height: 10),
+                  resultPane(),
                 ],
               ),
             );
@@ -56,5 +59,13 @@ Widget animationContainer(Size size) {
     ),
     clipBehavior: Clip.hardEdge,
     child: SurfaceTensionAnimation(size),
+  );
+}
+
+Widget resultPane() {
+  return Column(
+    children: [
+      DisplayParameter(label: r"\gamma = \quad", value: 0.0, unit: r"\quad \frac{N}{m}", scale: 1.2,)
+    ],
   );
 }

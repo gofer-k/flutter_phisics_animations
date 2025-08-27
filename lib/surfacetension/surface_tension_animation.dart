@@ -58,11 +58,9 @@ class SurfaceTensionAnimationState
           touchPosition = details.localPosition;
         });
       },
-      child: Container(
-        child: CustomPaint(
-            painter: WaterSurfaceTensionPainter(animationStep, touchPosition)),
-      )
-    );
+      child: CustomPaint(
+        painter: WaterSurfaceTensionPainter(animationStep, touchPosition)),
+      );
   }
 
   Widget buildReflection(Widget child) {

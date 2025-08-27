@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:first_flutter_app/surfacetension/drop_painter.dart';
 import 'package:flutter/material.dart';
 
 class WaterSurfaceTensionPainter extends CustomPainter {
