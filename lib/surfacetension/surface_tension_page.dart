@@ -31,20 +31,9 @@ class SurfaceTensionPageState extends State<SurfaceTensionPage> with TickerProvi
             return Center(
               child: Column(
                 children: [
-                  // TODO: Display surface tension equation
-                  DisplayExpression(context: context, expression: r"\gamma = \frac{F}{l}", scale: 1.5,),
+                  DisplayExpression(context: context, expression: r"\gamma = \frac{F}{l} \quad [\frac{N}{m}]", scale: 1.5,),
                   SizedBox(height: 10),
-                  Container(
-                    width: width,
-                    height: width,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                      color: Colors.grey.shade200, // Light background for the graph
-                      // color: Color(0xFF87CEEB),
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    child: SurfaceTensionAnimation(Size(width, width)),
-                  )
+                  animationContainer(Size(width, width)),
                   // TODO: Animation parameters form
                 ],
               ),
@@ -54,4 +43,18 @@ class SurfaceTensionPageState extends State<SurfaceTensionPage> with TickerProvi
       ),
     );
   }
+}
+
+Widget animationContainer(Size size) {
+  return Container(
+    width: size.width,
+    height: size.height,
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.black),
+      color: Colors.grey.shade200, // Light background for the graph
+      // color: Color(0xFF87CEEB),
+    ),
+    clipBehavior: Clip.hardEdge,
+    child: SurfaceTensionAnimation(size),
+  );
 }
