@@ -7,7 +7,7 @@ import 'bermoulli_model_types.dart';
 import 'bernoulli_formula_anim_curve.dart';
 import 'bernoulli_painter.dart';
 import 'density.dart';
-import 'display_expression.dart';
+import 'widgets/display_expression.dart';
 import 'dynamic_label.dart';
 import 'factor_input_row.dart';
 import 'factor_slider.dart';

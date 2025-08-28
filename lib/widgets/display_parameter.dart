@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-import '../display_expression.dart';
+import 'display_expression.dart';
 import '../dynamic_label.dart';
 
 class DisplayParameter<T> extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'display_expression.dart';
+import 'widgets/display_expression.dart';
 
 class FactorSlider extends StatelessWidget {
   final String label;
